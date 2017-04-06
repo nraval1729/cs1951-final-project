@@ -2,7 +2,7 @@
 import sqlite3
 import csv
 import sys
-
+from unidecode import unidecode
 csv.field_size_limit(sys.maxsize)
 
 def load():
@@ -125,11 +125,19 @@ def load():
     with open('../data/archive/jams.tsv','rU') as tsvin:
         reader = csv.DictReader(tsvin, delimiter='\t')
         for row in reader:
-            if (row["spotify_uri"]):
-                c.execute('''
-                    INSERT OR IGNORE INTO jams
-                    VALUES (?, ?, ?)
-                    ''', (row["jam_id"], row["spotify_uri"][14:], row["creation_date"]))
+            spotify_uri = row["spotify_uri"]
+            if (not row["spotify_uri"]):
+                for row2 in reader:
+                    artist1 = unidecode(row["artist"])
+                    artist2 = unidecode(row2["artist"])
+                    song = unidecode(row["title"])
+                    song2 = unidecode(row2["title"])
+                    if (row2["spotify_uri"] and (song = song2) and (song = song3)):
+                        spotify_uri = row2["spotify_uri"]
+            c.execute('''
+                INSERT OR IGNORE INTO jams
+                VALUES (?, ?, ?)
+                ''', (row["jam_id"], spotify_uri[14:], row["creation_date"]))
 
     # Insert into likes table
     with open('../data/archive/likes.tsv', 'r') as f:
