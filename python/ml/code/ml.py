@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+from __future__ import division
 import sqlite3
 import csv
 import sys
-from __future__ import division
 import sys
 import csv
 import argparse
@@ -40,9 +40,9 @@ def load_songs():
                 '''):
 
         songs_features.append(song[1:])
-        songs_popularity.append(song[0])
+        songs_labels.append(song[0])
 
-    return songs_features, songs_popularity
+    return songs_features, songs_labels
 
 # Same function as above, but loads the next 10 songs after the initial 1000 songs
 # we trained on.
@@ -53,7 +53,7 @@ def load_test_songs():
     c = conn.cursor()
 
     songs_features = []
-    songs_popularity = []
+    songs_labels = []
 
     for song in c.execute('''
                     SELECT spotify_song_popularity, acousticness, danceability, energy,
@@ -80,6 +80,11 @@ def main():
 
     # Load training text and training labels
     training_features, training_labels = load_songs()
+    count = 0.0
+    for label in training_labels:
+        if label == 0:
+            count += 1.0
+    print("Percent of training labels 0: ", count/len(training_labels))
 
     # Transform training labels to numpy array (numpy.array)
     training_labels = numpy.array(training_labels)
@@ -88,7 +93,7 @@ def main():
     ##### TRAIN THE MODEL ######################################
     # Initialize the corresponding type of the classifier
     # NOTE: Be sure to name the variable for your classifier "classifier" so that our stencil works for you!
-    classifier = LogisticRegression()
+    classifier = LogisticRegression(C=0.5)
 
     # TODO: Train your classifier using 'fit'
     classifier.fit(training_features, training_labels)
@@ -103,7 +108,9 @@ def main():
     print('training mean accuracy:', training_score)
 
     # TODO: Perform 10 fold cross validation (cross_val_score) with scoring='accuracy'
+    print("Doing cross val now:")
     scores = cross_val_score(classifier, training_features, training_labels, scoring='accuracy', cv=10)
+    print("Done with cross val")
 
     # TODO: Print the mean and std deviation of the cross validation score
     print('mean and std dev for cross validation scores:', scores.mean(), scores.std())
@@ -121,30 +128,29 @@ def main():
     
         # Test the classifier on the given test set
         # TODO: Load test labels and texts using load_file()
-        (test_true_labels, test_texts) = load_file(opts.test)
+    (test_features, test_labels) = load_test_songs()
+    print("Test_labesl: ", test_labels)
 
-        # TODO: Extract test features using vectorizer.transform()
-        test_features = vectorizer.transform(test_texts)
+    # TODO: Predict the labels for the test set
+    test_predicted_labels = classifier.predict(test_features)
+    print("Predicted test labesl: ", test_predicted_labels)
 
-        # TODO: Predict the labels for the test set
-        test_predicted_labels = classifier.predict(test_features)
+    # TODO: Print mean test accuracy
+    test_score = classifier.score(test_features, test_labels)
 
-        # TODO: Print mean test accuracy
-        test_score = classifier.score(test_features, test_true_labels)
-        if (opts.p):
-            print('predicted mean accuracy:', test_score)
+    print('predicted mean accuracy:', test_score)
 
         # TODO: Print the confusion matrix using your implementation
-        our_cm = our_confusion_matrix(test_true_labels, test_predicted_labels)
-        if (opts.p):
-            print('our confusion matrix:')
-            print(our_cm)
+        # our_cm = our_confusion_matrix(test_true_labels, test_predicted_labels)
+        # if (opts.p):
+        #     print('our confusion matrix:')
+        #     print(our_cm)
 
-        # TODO: Print the confusion matrix using sklearn's implementation
-        cm = confusion_matrix(test_true_labels, test_predicted_labels)
-        if (opts.p):
-            print('sklearn confusion matrix:')
-            print(cm)
+        # # TODO: Print the confusion matrix using sklearn's implementation
+        # cm = confusion_matrix(test_true_labels, test_predicted_labels)
+        # if (opts.p):
+        #     print('sklearn confusion matrix:')
+        #     print(cm)
 
     ############################################################
 
@@ -166,10 +172,9 @@ def our_confusion_matrix(true, pred):
 
     return numpy.array(our_confusion_matrix)
 
-if __name__ == '__main__':
+if __name__ == '__main__':   
     main()
 
-    songs_features, songs_popularity = load_songs()
+    # songs_features, songs_popularity = load_songs()
 
-    test_features, test_popularity = load_test_songs()
-    print(test_popularity)
+    # test_features, test_popularity = load_test_songs()
