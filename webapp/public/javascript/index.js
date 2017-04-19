@@ -30,7 +30,7 @@ $(document).ready(function() {
     switchSearchPlaceholder(searchSpotter);
   });
 
-  // Listen on
+  // Listen on the dropdown song (returned from search)
   $('.song_sug').click(function() {
     $('.song_sug').hide();
     $('#song_search').val($(this).text());
@@ -138,7 +138,7 @@ $(document).ready(function() {
 
       if (searchSpotter) {
         $.post("/search", {search: text}, function(result) {
-          updateUIWithResult(result);
+          updateUIWithResult(result, text);
         });
       } else {
         delay(function() {
@@ -151,15 +151,32 @@ $(document).ready(function() {
 
           $.get(SPOTIFY_SEARCH_ENDPOINT, spotifySearchParams, function(spotifyResult) {
             var result = formatSpotifyResult(spotifyResult);
-            updateUIWithResult(result);
+            updateUIWithResult(result, text);
           });
         }, KEYUP_DELAY_MS);
       }
     }
   }
 
+  //  a) song_id: different, depending on if 'Spotter' or 'Spotify' type is
+  //     being used
+  //  b) song_name: the song name
+  //  c) artist_name: the artist name
   function formatSpotifyResult(spotifyResult) {
+    var formattedResult = [];
 
+    var items = spotifyResult.tracks.items;
+
+    $.each(items, function(index, elem) {
+      var resultObj = {};
+      resultObj.song_id = elem.id;
+      resultObj.song_name = elem.name;
+      resultObj.artist_name = elem.artists[0].name;
+
+      formattedResult.push(resultObj);
+    });
+
+    return formattedResult;
   }
 
   // Assumes input variable 'result' is:
@@ -169,7 +186,7 @@ $(document).ready(function() {
   //       being used
   //    b) song_name: the song name
   //    c) artist_name: the artist name
-  function updateUIWithResult(result) {
+  function updateUIWithResult(result, text) {
     console.log(result);
     curr_songs = result;
     song_names = [];
