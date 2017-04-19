@@ -11,11 +11,14 @@ var db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY);
 // var SEARCH_SIZE = 5;
 
 module.exports = {
-  searchSongLikes: searchSongLikes
+  genreData: genreData
 }
 
-function searchSongLikes(req, res) {
+// Pass in a span of years
+function genreData(req, res) {
+  
   var songId = req.body.songId; // frontend should pass the user's search as a 'songId' parameter
+
   console.log("songId = " + songId);
   db.serialize(function() {
     var sqlParams = [songId];
