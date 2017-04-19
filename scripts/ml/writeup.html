@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <h1>Writeup: Lab 4</h1>
+    <ul>
+        <li>You have <i>n</i> tweets that you'd like to classify. <i>m</i> of the <i>n</i> tweets are positive tweet, while the remaining are negative. You have a classifier that assigns any tweets to be positive. Given this scenario, what are the precision and recall values (in terms of <i>m</i> and <i>n</i>) for your classifier? </li>
+            <ul>
+                <li>Precision = TP / (TP + FP) = m / (m + (n - m)) = m / n</li>
+                <li>Recall = TP / (TP + FN) = m / (m + 0) = m / m = 1</li>
+            </ul>
+        <li>Now, consider the case where you always assign each tweet to be negative. What will the precision and recall values be? </li>
+            <ul>
+                <li>Precision = TP / (TP + FP) = 0 / (0 + 0) = undefined</li>
+                <li>Recall = TP / (TP + FN) = 0 / (0 + m) = 0</li>
+            </ul>
+    </ul>
+</body>
+</html>
