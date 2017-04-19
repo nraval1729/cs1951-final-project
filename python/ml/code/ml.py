@@ -2,15 +2,14 @@
 import sqlite3
 import csv
 import sys
-from __future__ import division
+#from __future__ import division
 import sys
 import csv
 import argparse
 from collections import defaultdict
-
 import util
-
 import numpy
+import math
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score
@@ -25,30 +24,7 @@ from tokenizer import Tokenizer
 # # matches for both arrays for each song).
 def load_songs():
     ### MODIFY THIS TO POINT TO YOUR DATABASE ###
-    conn = sqlite3.connect('../../../node/app/database.db')
-    conn.text_factory = str
-    c = conn.cursor()
-
-    songs_features = []
-    songs_labels = []
-
-    for song in c.execute('''
-                    SELECT spotify_song_popularity, acousticness, danceability, energy,
-                    instrumentalness, loudness, mode, speechiness, tempo, valence,
-                    liveness
-                    FROM songs ORDER BY song_name LIMIT 1000
-                '''):
-
-        songs_features.append(song[1:])
-        songs_popularity.append(song[0])
-
-    return songs_features, songs_popularity
-
-# Same function as above, but loads the next 10 songs after the initial 1000 songs
-# we trained on.
-def load_test_songs():
-    ### MODIFY THIS TO POINT TO YOUR DATABASE ###
-    conn = sqlite3.connect('../../../node/app/database.db')
+    conn = sqlite3.connect('../../../data/songs.db')
     conn.text_factory = str
     c = conn.cursor()
 
@@ -56,16 +32,43 @@ def load_test_songs():
     songs_popularity = []
 
     for song in c.execute('''
-                    SELECT spotify_song_popularity, acousticness, danceability, energy,
-                    instrumentalness, loudness, mode, speechiness, tempo, valence,
-                    liveness
-                    FROM songs ORDER BY song_name LIMIT 10 OFFSET 1000
+                    SELECT song_hotness, danceability, energy,
+                    loudness, mode, tempo, key, mean_segment_timbre                  
+                    FROM songs ORDER BY track_id LIMIT 1000
+                '''):
+        if (song[0] and not math.isnan(float(song[0]))):
+            songs_features.append(tuple(float(f) for f in song[1:]))
+            int_song = 0
+            if (int( 100 * float(song[0])) < 60):
+                int_song = 1
+            songs_popularity.append(int_song)
+    return songs_features, songs_popularity
+
+# Same function as above, but loads the next 10 songs after the initial 1000 songs
+# we trained on.
+def load_test_songs():
+    ### MODIFY THIS TO POINT TO YOUR DATABASE ###
+    conn = sqlite3.connect('../../../data/database.db')
+    conn.text_factory = str
+    c = conn.cursor()
+
+    songs_features = []
+    songs_popularity = []
+
+    for song in c.execute('''
+                    SELECT song_hotness, danceability, energy,
+                    loudness, mode, tempo, key, mean_segment_timbre 
+                    FROM songs ORDER BY track_id LIMIT 10 OFFSET 1000
                 '''):
 
-        songs_features.append(song[1:])
-        songs_labels.append(song[0])
+        if (song[0] and not math.isnan(float(song[0]))):  
+            songs_features.append(tuple(float(f) for f in song[1:]))
+            int_song = 0
+            if (int( 100 * float(song[0])) > 60):
+                int_song = 1
+            songs_popularity.append(int_song)
 
-    return songs_features, songs_labels
+    return songs_features, songs_popularity
 
 if __name__ == '__main__':
     songs_features, songs_labels = load_songs()
@@ -81,8 +84,6 @@ def main():
     # Load training text and training labels
     training_features, training_labels = load_songs()
 
-    # Transform training labels to numpy array (numpy.array)
-    training_labels = numpy.array(training_labels)
     ############################################################
 
     ##### TRAIN THE MODEL ######################################
@@ -121,30 +122,30 @@ def main():
     
         # Test the classifier on the given test set
         # TODO: Load test labels and texts using load_file()
-        (test_true_labels, test_texts) = load_file(opts.test)
+    (test_true_labels, test_texts) = load_test(opts.test)
 
         # TODO: Extract test features using vectorizer.transform()
-        test_features = vectorizer.transform(test_texts)
+    test_features = vectorizer.transform(test_texts)
 
         # TODO: Predict the labels for the test set
-        test_predicted_labels = classifier.predict(test_features)
+    test_predicted_labels = classifier.predict(test_features)
 
         # TODO: Print mean test accuracy
-        test_score = classifier.score(test_features, test_true_labels)
-        if (opts.p):
-            print('predicted mean accuracy:', test_score)
+    test_score = classifier.score(test_features, test_true_labels)
+    if (opts.p):
+        print('predicted mean accuracy:', test_score)
 
         # TODO: Print the confusion matrix using your implementation
-        our_cm = our_confusion_matrix(test_true_labels, test_predicted_labels)
-        if (opts.p):
-            print('our confusion matrix:')
-            print(our_cm)
+    our_cm = our_confusion_matrix(test_true_labels, test_predicted_labels)
+    if (opts.p):
+        print('our confusion matrix:')
+        print(our_cm)
 
         # TODO: Print the confusion matrix using sklearn's implementation
-        cm = confusion_matrix(test_true_labels, test_predicted_labels)
-        if (opts.p):
-            print('sklearn confusion matrix:')
-            print(cm)
+    cm = confusion_matrix(test_true_labels, test_predicted_labels)
+    if (opts.p):
+        print('sklearn confusion matrix:')
+        print(cm)
 
     ############################################################
 

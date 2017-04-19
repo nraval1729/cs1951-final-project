@@ -83,6 +83,7 @@ def main():
                     for album in data['albums']:
                         if (album['release_date_precision'] == 'day'):
                             genres = parse_genres(album['genres'])
+                            print (genres)
                             images  = ("" if  len(album['images']) == 0 else album['images'][0]['url'])
                             write_album.writerow([
                                 album['id'],
