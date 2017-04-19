@@ -8,6 +8,7 @@ var path = require('path');
 
 //  Local dependencies
 //    Routers
+var authenticateRouter = require('./authenticate/router');
 var homeRouter = require('./home/router');
 var genrePageRouter = require('./genre_page/router');
 var searchRouter = require('./search/router');
@@ -59,6 +60,7 @@ app.use(logger('dev'));
 
 // use modularized routers
 app.use('/', homeRouter);
+app.use('/authenticate', authenticateRouter);
 app.use('/genres', genrePageRouter);
 app.use('/search', searchRouter);
 app.use('/genreData', genreDataRouter);
