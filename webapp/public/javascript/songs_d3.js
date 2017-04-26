@@ -1,3 +1,8 @@
+// THIS FILE DOES THE SAME AS INDEX.JS. i wanted to strip out d3 code from
+// index.js into a separate JS file, but realized that this code is pretty obselete
+// since it deals with jams still
+
+
 // Chart dimensions
 var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 39.5};
 var width = 960 - margin.right;
