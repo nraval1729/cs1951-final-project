@@ -5,6 +5,5 @@ module.exports = {
 }
 
 function genrePageGet(req, res) {
-  console.log("in genrepageget");
   res.sendFile(join(__dirname, '../..', 'views', './genres.html'));
 }

@@ -7,7 +7,7 @@ var controller = require('./controller');
 // Router object
 var router = express.Router();
 
-router.route('/genres')
+router.route('/')
   .get(controller.genrePageGet);
 
 module.exports = router;
