@@ -8,7 +8,7 @@ from decimal import *
 
 TWOPLACES = Decimal(10) ** -2
 
-def get_all_song_data(song_data):
+def get_all_song_data(song_data, unique_genres):
 	par_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
 	curr_dir = par_dir + "/data/song_set2/"
 
@@ -19,9 +19,10 @@ def get_all_song_data(song_data):
 		# 	print filename
 		print i, " ", filename
 		i += 1
-		get_individual_song_data(curr_dir+filename, song_data)
+		get_individual_song_data(curr_dir+filename, song_data, unique_genres)
+		# break
 
-def get_individual_song_data(filename, song_data):
+def get_individual_song_data(filename, song_data, unique_genres):
 	c = h.open_h5_file_read(filename.strip())
 	c_dict = {}
 
@@ -32,6 +33,16 @@ def get_individual_song_data(filename, song_data):
 
 	c_dict['artist_location'] = h.get_artist_location(c)
 	c_dict['artist_name'] = h.get_artist_name(c)
+
+	artist_mbtags = h.get_artist_mbtags(c)
+	
+	# Store in a set to get all the unique genres
+	for tag in artist_mbtags:
+		unique_genres.add(tag)
+	
+	# Store the comma separated genres for this song.
+	c_dict['artist_mbtags'] = ", ".join(tag for tag in h.get_artist_mbtags(c))
+
 	c_dict['song_id'] = h.get_song_id(c)
 	c_dict['song_hotness'] = Decimal(h.get_song_hotttnesss(c)).quantize(TWOPLACES)
 	c_dict['sample_rate'] = Decimal(str(h.get_analysis_sample_rate(c))).quantize(TWOPLACES)
@@ -72,10 +83,16 @@ def get_individual_song_data(filename, song_data):
 
 	song_data.append(c_dict)
 
-def write_all_song_data(song_data):
-		with open("../songs.csv", "a") as s:
+
+def write_all_song_data(song_data, unique_genres):
+		with open("../genres.txt", "w") as g:
+			for genre in list(unique_genres):
+				g.write(genre)
+				g.write("\n")
+
+		with open("../songs.csv", "w") as s:
 			writer = csv.writer(s)
-			writer.writerow(['artist_familiarity', 'artist_hotness', 'artist_id', 'artist_location', 'artist_name', 'song_id', 'song_hotness', 'sample_rate', 'danceability', 'duration', 'end_of_fade_in', 'start_of_fade_out', 'energy', 'key', 'key_confidence', 'loudness', 'mode', 'mode_confidence', 'tempo', 'time_signature', 'time_signature_confidence', 'track_id', 'mean_segment_pitch', 'mean_segment_timbre', 'mean_segment_loudness_max', 'mean_segment_loudness_max_time', 'mean_segment_loudness_start', 'mean_section_start', 'mean_section_confidence', 'mean_beat_start', 'mean_beat_confidence', 'mean_bar_start', 'mean_bar_confidence', 'mean_tatum_start', 'mean_tatum_confidence', 'release_year'])
+			writer.writerow(['artist_familiarity', 'artist_hotness', 'artist_id', 'artist_location', 'artist_name', 'artist_mbtags', 'song_id', 'song_hotness', 'sample_rate', 'danceability', 'duration', 'end_of_fade_in', 'start_of_fade_out', 'energy', 'key', 'key_confidence', 'loudness', 'mode', 'mode_confidence', 'tempo', 'time_signature', 'time_signature_confidence', 'track_id', 'mean_segment_pitch', 'mean_segment_timbre', 'mean_segment_loudness_max', 'mean_segment_loudness_max_time', 'mean_segment_loudness_start', 'mean_section_start', 'mean_section_confidence', 'mean_beat_start', 'mean_beat_confidence', 'mean_bar_start', 'mean_bar_confidence', 'mean_tatum_start', 'mean_tatum_confidence', 'release_year'])
 
 			for data in song_data:
 				if (data["song_hotness"] and not math.isnan(data['song_hotness'])):
@@ -84,10 +101,11 @@ def write_all_song_data(song_data):
 
 def main():
 	song_data = []
+	unique_genres = set()
 
-	get_all_song_data(song_data)
+	get_all_song_data(song_data, unique_genres)
 
-	write_all_song_data(song_data)
+	write_all_song_data(song_data, unique_genres)
 
 if __name__ == "__main__":
 	main() 
