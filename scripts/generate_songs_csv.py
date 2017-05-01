@@ -3,13 +3,14 @@ import hdf5_getters as h
 import os
 import os.path
 import numpy
+import math
 from decimal import *
 
 TWOPLACES = Decimal(10) ** -2
 
 def get_all_song_data(song_data):
 	par_dir = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
-	curr_dir = par_dir + "/songs_10k/"
+	curr_dir = par_dir + "/data/song_set2/"
 
 	i = 0
 
@@ -72,12 +73,13 @@ def get_individual_song_data(filename, song_data):
 	song_data.append(c_dict)
 
 def write_all_song_data(song_data):
-		with open("../songs.csv", "w") as s:
+		with open("../songs.csv", "a") as s:
 			writer = csv.writer(s)
 			writer.writerow(['artist_familiarity', 'artist_hotness', 'artist_id', 'artist_location', 'artist_name', 'song_id', 'song_hotness', 'sample_rate', 'danceability', 'duration', 'end_of_fade_in', 'start_of_fade_out', 'energy', 'key', 'key_confidence', 'loudness', 'mode', 'mode_confidence', 'tempo', 'time_signature', 'time_signature_confidence', 'track_id', 'mean_segment_pitch', 'mean_segment_timbre', 'mean_segment_loudness_max', 'mean_segment_loudness_max_time', 'mean_segment_loudness_start', 'mean_section_start', 'mean_section_confidence', 'mean_beat_start', 'mean_beat_confidence', 'mean_bar_start', 'mean_bar_confidence', 'mean_tatum_start', 'mean_tatum_confidence', 'release_year'])
 
 			for data in song_data:
-				writer.writerow([data['artist_familiarity'], data['artist_hotness'], data['artist_id'], data['artist_location'], data['artist_name'], data['song_id'], data['song_hotness'], data['sample_rate'], data['danceability'], data['duration'], data['end_of_fade_in'], data['start_of_fade_out'], data['energy'], data['key'], data['key_confidence'], data['loudness'], data['mode'], data['mode_confidence'], data['tempo'], data['time_signature'], data['time_signature_confidence'], data['track_id'], data['mean_segment_pitch'], data['mean_segment_timbre'], data['mean_segment_loudness_max'], data['mean_segment_loudness_max_time'], data['mean_segment_loudness_start'], data['mean_section_start'], data['mean_section_confidence'], data['mean_beat_start'], data['mean_beat_confidence'], data['mean_bar_start'], data['mean_bar_confidence'], data['mean_tatum_start'], data['mean_tatum_confidence'], data['release_year']])
+				if (data["song_hotness"] and not math.isnan(data['song_hotness'])):
+					writer.writerow([data['artist_familiarity'], data['artist_hotness'], data['artist_id'], data['artist_location'], data['artist_name'], data['song_id'], data['song_hotness'], data['sample_rate'], data['danceability'], data['duration'], data['end_of_fade_in'], data['start_of_fade_out'], data['energy'], data['key'], data['key_confidence'], data['loudness'], data['mode'], data['mode_confidence'], data['tempo'], data['time_signature'], data['time_signature_confidence'], data['track_id'], data['mean_segment_pitch'], data['mean_segment_timbre'], data['mean_segment_loudness_max'], data['mean_segment_loudness_max_time'], data['mean_segment_loudness_start'], data['mean_section_start'], data['mean_section_confidence'], data['mean_beat_start'], data['mean_beat_confidence'], data['mean_bar_start'], data['mean_bar_confidence'], data['mean_tatum_start'], data['mean_tatum_confidence'], data['release_year']])
 
 
 def main():
