@@ -61,15 +61,15 @@ def load_songs(useGenre, useDance, useEnergy, useLoudness):
             genres = song[1].split(',')
             if (song[1]):
                 for g in genres:
-                    print (g)
-                    print (len(features))
-                    print (len(features_combine))
-                    print (len(features) + genre_list[g])
+                    # print (g)
+                    # print (len(features))
+                    # print (len(features_combine))
+                    # print (len(features) + genre_list[g])
                     features_combine[len(features) + genre_list[g]] += 1
 
             int_song = 0
             songs_features.append(tuple(features_combine))
-            if (int( 100 * float(song[0])) < 60):
+            if (int( 100 * float(song[0])) > 50.0):
                 int_song = 1
             songs_popularity.append(int_song)
 
@@ -93,7 +93,7 @@ def load_test_songs():
             songs_features.append(tuple(float(f) for f in song[1:]))
 
             int_song = 0
-            if (int( 100 * float(song[0])) > 60):
+            if (int( 100 * float(song[0])) > 60.0):
                 int_song = 1
             songs_popularity.append(int_song)
 
@@ -131,9 +131,9 @@ def main():
     training_features, training_labels = load_songs(True, True, True, True)
     count = 0.0
     for label in training_labels:
-        if label == 0:
+        if label == 1:
             count += 1.0
-    print("Percent of training labels 0: ", count/len(training_labels))
+    print("Percent of training labels 1: ", count/len(training_labels))
 
     ############################################################
 
@@ -151,7 +151,11 @@ def main():
     ###### VALIDATE THE MODEL ##################################
     # TODO: Print training mean accuracy using 'score'
     training_score = classifier.score(training_features, training_labels)
-    
+    #predicted_probs = classifier.predict_proba(training_labels)
+
+    #print (classifier.coef_)
+    #print (predicted_probs)
+
     print('training mean accuracy:', training_score)
 
     # TODO: Perform 10 fold cross validation (cross_val_score) with scoring='accuracy'
