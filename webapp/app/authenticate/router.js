@@ -8,6 +8,6 @@ var controller = require('./controller');
 var router = express.Router();
 
 router.route('/')
-  .get(controller.genrePageGet);
+  .get(controller.accessTokenGet);
 
 module.exports = router;

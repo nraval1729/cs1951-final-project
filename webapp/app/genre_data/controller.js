@@ -16,32 +16,23 @@ module.exports = {
 
 // Pass in a span of years
 function genreData(req, res) {
-  
-  var songId = req.body.songId; // frontend should pass the user's search as a 'songId' parameter
+  var beginYear = parseInt(req.body.beginYear);
+  var endYear = beginYear + 10;
+  // add 5 to beginning year, or make this parameterizable
 
-  console.log("songId = " + songId);
   db.serialize(function() {
-    var sqlParams = [songId];
-    var sqlQuery = 'SELECT COUNT(*) AS likes, creation_date, jams_of_this_song.jam_id \
-                    FROM \
-                      ( \
-                      SELECT jam_id, creation_date \
-                      FROM jams \
-                      WHERE song_id = ? \
-                      ) jams_of_this_song \
-                    JOIN \
-                    LIKES \
-                    ON likes.jam_id = jams_of_this_song.jam_id \
-                    GROUP BY creation_date';
+    var sqlParams = [beginYear, endYear];
+    console.log(sqlParams)
+    var sqlQuery = 'SELECT song_hotness, artist_mbtags, release_year \
+                    FROM songs WHERE CAST(release_year AS INT) > ? AND CAST(release_year AS INT) < ?;'
     var sqlStatement = db.prepare(sqlQuery);
     var results = sqlStatement.all(sqlParams, function(err, rows){
       if (err) {
         console.log(err);
       } else {
-        console.log(rows);
-
         res.status(200).send(rows);
       }
     });
+    return results;
   });
 }
