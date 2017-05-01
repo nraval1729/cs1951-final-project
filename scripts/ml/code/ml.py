@@ -3,14 +3,12 @@ from __future__ import division
 import sqlite3
 import csv
 import sys
-import sys
 import csv
 import argparse
 from collections import defaultdict
-
 import util
-
 import numpy
+import math
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import cross_val_score
@@ -19,56 +17,98 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from tokenizer import Tokenizer
 
+genre_list = {}
+# Based on parameters that were sent from the web app, create a
+# a query that returns the correct information for features to use
+def choose_query(useGenre, useDance, useEnergy, useLoudness):
+    query = "SELECT song_hotness,"
+    if useGenre:
+        query += " artist_mbtags,"
+    if useDance:
+        query += " danceability,"
+    if useEnergy:
+        query += " energy,"
+    if useLoudness:
+        query += " loudness,"
+
+    query += " mode, tempo, key, mean_segment_timbre FROM songs ORDER BY track_id LIMIT 9000"
+
+    return query
+
 # # Load songs into two arrays and returns them (first array consists of
 # # an array of tuples, where each tuple represents the features of a
 # # particular song. second array consists of popularity for a song. indexing
 # # matches for both arrays for each song).
-def load_songs():
+def load_songs(useGenre, useDance, useEnergy, useLoudness):
     ### MODIFY THIS TO POINT TO YOUR DATABASE ###
-    conn = sqlite3.connect('../../../node/app/database.db')
+    conn = sqlite3.connect('../../../data/songs.db')
     conn.text_factory = str
     c = conn.cursor()
 
     songs_features = []
-    songs_labels = []
+    songs_popularity = []
 
-    for song in c.execute('''
-                    SELECT spotify_song_popularity, acousticness, danceability, energy,
-                    instrumentalness, loudness, mode, speechiness, tempo, valence,
-                    liveness
-                    FROM songs ORDER BY song_name LIMIT 1000
-                '''):
+    query = choose_query(useGenre, useDance, useEnergy, useLoudness)
 
-        songs_features.append(song[1:])
-        songs_labels.append(song[0])
+    for song in c.execute(query):
+        #print (song)
+        if (song[0] and not math.isnan(float(song[0]))):
+            features = list(float(f) for f in song[2:])
+            genre_features = ([0] * len(genre_list))
+            features_combine = features[:]
+            features_combine.extend(genre_features)
+            
+            genres = song[1].split(',')
+            if (song[1]):
+                for g in genres:
+                    print (g)
+                    print (len(features))
+                    print (len(features_combine))
+                    print (len(features) + genre_list[g])
+                    features_combine[len(features) + genre_list[g]] += 1
 
-    return songs_features, songs_labels
+            int_song = 0
+            songs_features.append(tuple(features_combine))
+            if (int( 100 * float(song[0])) < 60):
+                int_song = 1
+            songs_popularity.append(int_song)
 
+    return songs_features, songs_popularity
 # Same function as above, but loads the next 10 songs after the initial 1000 songs
 # we trained on.
 def load_test_songs():
     ### MODIFY THIS TO POINT TO YOUR DATABASE ###
-    conn = sqlite3.connect('../../../node/app/database.db')
+    conn = sqlite3.connect('../../../data/database.db')
     conn.text_factory = str
     c = conn.cursor()
 
     songs_features = []
     songs_labels = []
 
-    for song in c.execute('''
-                    SELECT spotify_song_popularity, acousticness, danceability, energy,
-                    instrumentalness, loudness, mode, speechiness, tempo, valence,
-                    liveness
-                    FROM songs ORDER BY song_name LIMIT 10 OFFSET 1000
-                '''):
+    query = choose_query(useGenre, useDance, useEnergy, useLoudness)
 
-        songs_features.append(song[1:])
-        songs_labels.append(song[0])
+    for song in c.execute(query):
 
-    return songs_features, songs_labels
+        if (song[0] and not math.isnan(float(song[0]))):  
+            songs_features.append(tuple(float(f) for f in song[1:]))
+
+            int_song = 0
+            if (int( 100 * float(song[0])) > 60):
+                int_song = 1
+            songs_popularity.append(int_song)
+
+    return songs_features, songs_popularity
 
 if __name__ == '__main__':
-    songs_features, songs_labels = load_songs()
+    with open("../../../genres.txt") as genre_in:
+        genres = genre_in.readline()
+        i = 0
+        while (genres):
+            genre = genres.rstrip()
+            genre_list[genre] = i
+            i += 1
+            genres = genre_in.readline()
+    songs_features, songs_labels = load_songs(True, True, True, True)
 
 # See: https://stackoverflow.com/questions/15008758/parsing-boolean-values-with-argparse
 # Source: http://www.goliatone.com/blog/2015/04/04/python-parse-boolean-values-with-argparse/
@@ -77,17 +117,24 @@ def str2bool(str):
   return str.lower() in ("yes", "true", "t", "1")
 
 def main():
+    #Load all genres into a dictionary
+    with open("../../../genres.txt") as genre_in:
+        genres = genre_in.readline()
+        i = 0
+        while (genres):
+            genre = genres.rstrip()
+            genre_list[genre] = i
+            i += 1
+            genres = genre_in.readline()
 
     # Load training text and training labels
-    training_features, training_labels = load_songs()
+    training_features, training_labels = load_songs(True, True, True, True)
     count = 0.0
     for label in training_labels:
         if label == 0:
             count += 1.0
     print("Percent of training labels 0: ", count/len(training_labels))
 
-    # Transform training labels to numpy array (numpy.array)
-    training_labels = numpy.array(training_labels)
     ############################################################
 
     ##### TRAIN THE MODEL ######################################
@@ -122,36 +169,6 @@ def main():
     #     # Print top n most informative features for positive and negative classes
     #     print('most informative features:')
     #     util.print_most_informative_features(opts.classifier, vectorizer, classifier, opts.top)
-    ############################################################
-
-    ##### TEST THE MODEL #######################################
-    
-        # Test the classifier on the given test set
-        # TODO: Load test labels and texts using load_file()
-    (test_features, test_labels) = load_test_songs()
-    print("Test_labesl: ", test_labels)
-
-    # TODO: Predict the labels for the test set
-    test_predicted_labels = classifier.predict(test_features)
-    print("Predicted test labesl: ", test_predicted_labels)
-
-    # TODO: Print mean test accuracy
-    test_score = classifier.score(test_features, test_labels)
-
-    print('predicted mean accuracy:', test_score)
-
-        # TODO: Print the confusion matrix using your implementation
-        # our_cm = our_confusion_matrix(test_true_labels, test_predicted_labels)
-        # if (opts.p):
-        #     print('our confusion matrix:')
-        #     print(our_cm)
-
-        # # TODO: Print the confusion matrix using sklearn's implementation
-        # cm = confusion_matrix(test_true_labels, test_predicted_labels)
-        # if (opts.p):
-        #     print('sklearn confusion matrix:')
-        #     print(cm)
-
     ############################################################
 
 def our_confusion_matrix(true, pred):

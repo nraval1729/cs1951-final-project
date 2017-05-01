@@ -37,6 +37,7 @@ def load():
             reader = csv.DictReader(tsvin, delimiter='\t')
             for row in reader:
                 spotify_uri = row["spotify_uri"]
+                print (spotify_uri)
                 if (not row["spotify_uri"] and row["title"] and row["artist"]):
                     tsvin2.seek(0)
                     reader2 = csv.DictReader(tsvin2, delimiter='\t')
@@ -49,6 +50,7 @@ def load():
                     
                             if (row2["spotify_uri"] and (song == song2) and (artist1 == artist2)):
                                 spotify_uri = row2["spotify_uri"]
+                            
                 print (spotify_uri)
                 if (spotify_uri):
                     c.execute('''

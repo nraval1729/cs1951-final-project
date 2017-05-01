@@ -8,6 +8,6 @@ var controller = require('./controller');
 var router = express.Router();
 
 router.route('/')
-  .post(controller.searchSongLikes);
+  .get(controller.accessTokenGet);
 
 module.exports = router;

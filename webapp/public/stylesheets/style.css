@@ -71,3 +71,22 @@ a {
   border-radius: 10px;
   text-align: center;
 }
+
+#genre_chart {
+  text-align: center;
+}
+
+/* Slider CSS */
+.year-range-title {
+  margin-right: 10px;
+}
+#year-range-slider {
+  margin-right: 10px;
+}
+#year-range-slider .slider-selection {
+	background: #BABABA;
+}
+
+.input-group {
+  margin: auto;
+}

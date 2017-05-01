@@ -5,5 +5,5 @@ module.exports = {
 }
 
 function homeGet(req, res) {
-  res.sendFile(join(__dirname, '../..', 'views', './home.html'));
+  res.sendFile(join(__dirname, '../..', 'views', './index.html'));
 }
