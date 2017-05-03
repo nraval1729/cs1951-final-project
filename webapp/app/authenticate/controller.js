@@ -45,4 +45,4 @@ function getSpotifyAccessToken(postRequestOptions) {
       resolve(parsedBody.access_token);
     });
   });
-}
+ }

@@ -10,9 +10,11 @@ var path = require('path');
 //    Routers
 var authenticateRouter = require('./authenticate/router');
 var homeRouter = require('./home/router');
-var genrePageRouter = require('./genre_page/router');
 var searchRouter = require('./search/router');
+var genrePageRouter = require('./genre_page/router');
 var genreDataRouter = require('./genre_data/router');
+var artistPageRouter = require('./artist_page/router');
+var artistDataRouter = require('./artist_data/router');
 
 // Constants
 var PORT = 1337;
@@ -61,9 +63,11 @@ app.use(logger('dev'));
 // use modularized routers
 app.use('/', homeRouter);
 app.use('/authenticate', authenticateRouter);
-app.use('/genres', genrePageRouter);
 app.use('/search', searchRouter);
+app.use('/genres', genrePageRouter);
 app.use('/genreData', genreDataRouter);
+app.use('/artists', artistPageRouter);
+app.use('/artistsData', artistDataRouter);
 
 /******************************************
  *                                        *
