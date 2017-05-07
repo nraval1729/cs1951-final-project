@@ -43,7 +43,6 @@ $(document).ready(function() {
 
   function getArtistData(beginYear) {
     $.post('/artistsData', {beginYear: beginYear}, function(data) {
-      console.log(data);
       // Mapping of artist_id to [artist_name, song_hotness, count_of_songs] to calculate average hotness
       artist_hotness_map = {};
       // Loop through data to set up mapping of genre to hotness (hotness will be an average)
@@ -73,9 +72,6 @@ $(document).ready(function() {
       for (var key in artist_hotness_map) {
         frequency_word_list.push({'text': artist_hotness_map[key][0], 'size': artist_hotness_map[key][1] * 70.0})
       }
-
-
-      console.log(frequency_word_list)
 
       d3.layout.cloud().size([800, 300])
         .words(frequency_word_list)
