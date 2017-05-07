@@ -132,7 +132,30 @@ var searchSpotter = true;
           headers: {"Authorization": "Bearer " + accessToken},
           success: function(features) {
             spotifyFeatures = features;
-            console.log(spotifyFeatures); // ask me how to actually get this. code needs some cleaning.
+            $.ajax({
+              url: "https://api.spotify.com/v1/tracks/" + songId,
+              success: function(trackInfo) {
+                artistId = trackInfo['album']['artists'][0]['id'];
+                songPopularity = trackInfo['popularity'];
+                $.ajax({
+                  url: "https://api.spotify.com/v1/artists/" + artistId,
+                  success: function(artistInfo) {
+                    artistPopularity = artistInfo['popularity'];
+
+                    desiredData = {};
+                    desiredData.artist_hotness = artistPopularity;
+                    desiredData.loudness = spotifyFeatures.loudness;
+                    desiredData.tempo = spotifyFeatures.tempo;
+                    desiredData.key = spotifyFeatures.key;
+                    desiredData.mode = spotifyFeatures.mode;
+                    desiredData.duration = spotifyFeatures.duration_ms;
+                    desiredData.time_signature = spotifyFeatures.time_signature;
+
+                    console.log(songPopularity, desiredData);
+                  }
+                })
+              }
+            })
           }
         });
       });
