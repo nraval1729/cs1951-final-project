@@ -5,12 +5,14 @@
 		<link rel="stylesheet" type="text/css" href="/stylesheets/style.css"/>
 		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/bootstrap-slider.min.js"></script>
 		<script src="https://d3js.org/d3.v4.min.js"></script>
-		<script src="/javascript/d3.tip.js"></script>
-		<!-- <script src="https://github.com/JMPerez/spotify-web-api-js/blob/master/src/spotify-web-api.js"></script> --> <!-- worth looking into to clean up clutter -->
-		<script src="/javascript/index.js"></script>
-		<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
+		<script src="/javascript/explore_d3.js"></script>
+		<script src="/javascript/d3.layout.cloud.js"></script>
+		<!-- <link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet"> -->
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/9.8.0/css/bootstrap-slider.min.css" rel="stylesheet">
 		<script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    <title>Explore</title>
 	</head>
 	<body>
 		<div class="container">
@@ -31,10 +33,10 @@
 				    <!-- Collect the nav links, forms, and other content for toggling -->
 				    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 				      <ul class="nav navbar-nav">
-				        <li class="active"><a href="/">Songs <span class="sr-only">(current)</span></a></li>
+				        <li><a href="/">Songs</a></li>
 				        <li><a href="genres">Genres</a></li>
 						<li><a href="artists">Artists</a></li>
-						<li><a href="explore">Explore</a></li>
+						<li class="active"><a href="#">Explore <span class="sr-only">(current)</span></a></li>
 				      </ul>
 				    </div><!-- /.navbar-collapse -->
 				  </div><!-- /.container-fluid -->
@@ -42,33 +44,12 @@
 			</div>
 
 			<div class="row">
-				<div class="col-sm-5"></div>
-				<div class="col-sm-6">
-					<input id="search_type" type="checkbox" checked data-toggle="toggle" data-on="Search Spotter" data-off="Search Spotify" data-onstyle="primary" data-offstyle="success">
-				</div>
-			</div>
-
-			<div class="row">
-			  <div class="col-sm-12">
-			    <div class="input-group">
-			      <span class="input-group-addon">Search</span>
-			      <input id="song_search" type="text" class="form-control typeahead" placeholder="Enter a song">
-			      <ul id="sug_list">
-			      	<li class="song_sug"></li>
-			      	<li class="song_sug"></li>
-			      	<li class="song_sug"></li>
-			      	<li class="song_sug"></li>
-			      	<li class="song_sug"></li>
-			  	</ul>
-			    </div>
-			  </div>
-			</div>
-
-			<div class="row">
-				<div class="col-sm-12" style="text-align: center">
-					<!-- To be completed with D3 via javascript -->
-				  <div class="chart" width="1000" height="550"></div>
-
+				<div class="col-sm-12">
+					<div class="input-group">
+						<span class="range-title">Select a sample size: </span>
+						<input class="range-slider" data-slider-id="range-slider" type="text" data-slider-min="1" data-slider-max="100" data-slider-step="1" data-slider-value="20"/>
+		        		<button class="range-button" type="button" class="btn btn-primary btn-xs">Enter</button>
+					</div>
 				</div>
 			</div>
 

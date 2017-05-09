@@ -59,13 +59,13 @@ var searchSpotter = true;
                     artistPopularity = artistInfo['popularity'];
 
                     desiredData = {};
-                    desiredData.artist_hotness = artistPopularity;
+                    desiredData.artistPopularity = artistPopularity;
                     desiredData.loudness = spotifyFeatures.loudness;
                     desiredData.tempo = spotifyFeatures.tempo;
                     desiredData.key = spotifyFeatures.key;
                     desiredData.mode = spotifyFeatures.mode;
                     desiredData.duration = spotifyFeatures.duration_ms;
-                    desiredData.time_signature = spotifyFeatures.time_signature;
+                    desiredData.timeSignature = spotifyFeatures.time_signature;
 
                     console.log(songPopularity, desiredData);
                     // create d3 bar graph with features as x-axis: artist_hotness, loudness^2, tempo, key, tempo * mode, mode, duration, time_signature

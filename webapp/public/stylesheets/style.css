@@ -65,16 +65,18 @@ a {
 }
 
 /* Slider CSS */
-.year-range-title {
+.range-title {
   margin-right: 10px;
 }
-#year-range-slider {
+
+.range-slider {
   margin-right: 10px;
-}
-#year-range-slider .slider-selection {
-	background: #BABABA;
 }
 
 .input-group {
   margin: auto;
+}
+
+.range-slider .slider-selection {
+  background: #BABABA;
 }
