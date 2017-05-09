@@ -143,13 +143,13 @@ var searchSpotter = true;
                     artistPopularity = artistInfo['popularity'];
 
                     desiredData = {};
-                    desiredData.artist_hotness = artistPopularity;
+                    desiredData.artistPopularity = artistPopularity;
                     desiredData.loudness = spotifyFeatures.loudness;
                     desiredData.tempo = spotifyFeatures.tempo;
                     desiredData.key = spotifyFeatures.key;
                     desiredData.mode = spotifyFeatures.mode;
                     desiredData.duration = spotifyFeatures.duration_ms;
-                    desiredData.time_signature = spotifyFeatures.time_signature;
+                    desiredData.timeSignature = spotifyFeatures.time_signature;
 
                     console.log(songPopularity, desiredData);
                   }
