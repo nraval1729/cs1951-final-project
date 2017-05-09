@@ -15,7 +15,7 @@ module.exports = {
   featureAveragesGet: featureAveragesGet
 }
 
-var featureAverages;
+var featureAveragesObj;
 
 /////////////////////
 // Route Functions //
@@ -68,24 +68,21 @@ function* exploreSpotterGenerator(req, res) {
 
   var results = yield* runSqlQuery(getNRandomRowsQuery, getNRandomRowsParams);
 
-  var songIdToFeaturesArray = [];  
+  var songIdToFeaturesObj = {};
   for (var i = 0; i < results.length; i++) {
     var songId = results[i]['song_id'];
     delete(results[i]['song_id']);
 
-    var songIdToFeatures = {};
     songIdToFeatures[songId] = results[i];
-
-    songIdToFeaturesArray.push(songIdToFeatures);
   }
 
-  var predictedPopularityArray = classifyFeatures(songIdToFeaturesArray);
+  var songIdToPredictedPopularityObj = classifyFeatures(songIdToFeaturesObj);
 
-  for (var songId in predictedPopularityArray) {
-
+  for (var songId in songIdToPredictedPopularityObj) {
+    songIdToFeaturesObj[songId]['predicted_song_hotness'] = songIdToPredictedPopularityObj[songId];
   }
 
-  res.status(200).send();
+  res.status(200).send(songIdToFeaturesObj);
 }
 
 // Get the popular and unpopular averages for all classifier features
@@ -94,34 +91,31 @@ function featureAveragesGet(req, res) {
 
   // The output from the Python process
   // Will be the stringified array of 2 JSON objects. The 0-index object will be the popular feature averages and the 1-index object will be the unpopular feature averages. Or vice-versa. Order doesn't really matter, just make sure it's documented.
-  // var featureAveragesStr = '{"popular": {"avg_song_hotness":0.4541682036148893,"avg_artist_hotness":0.4171302102545193,"avg_duration":247.54609482734062,"avg_key":5.33493175949834,"avg_loudness":-9.42896972448431,"avg_mode":0.6634508980506767,"avg_tempo":125.48716993445494,"avg_time_signature":3.6235848253553895}, "unpopular": {"avg_song_hotness":0.4541682036148893,"avg_artist_hotness":0.4171302102545193,"avg_duration":247.54609482734062,"avg_key":5.33493175949834,"avg_loudness":-9.42896972448431,"avg_mode":0.6634508980506767,"avg_tempo":125.48716993445494,"avg_time_signature":3.6235848253553895}}';
 
-  // An important side note: make sure keys in the JSON string are surrounded by double-quote literals, else JSON.parse() will throw an error
+  console.log("Inside featureAveragesGet, sending featureAverages: " +featureAveragesObj);
+  // The output from the Python process will be an object with 2 key-value pairs: popular and unpopular, mapped to objects with the averages for each feature
 
-  /* SPAWN PROCESS HERE: END */
+  // var featureAveragesObj = {'popular': {'avg_song_hotness':0.4541682036148893,'avg_artist_hotness':0.4171302102545193,'avg_duration':247.54609482734062,'avg_key':5.33493175949834,'avg_loudness':-9.42896972448431,'avg_mode':0.6634508980506767,'avg_tempo':125.48716993445494,'avg_time_signature':3.6235848253553895}, 'unpopular': {'avg_song_hotness':0.4541682036148893,'avg_artist_hotness':0.4171302102545193,'avg_duration':247.54609482734062,'avg_key':5.33493175949834,'avg_loudness':-9.42896972448431,'avg_mode':0.6634508980506767,'avg_tempo':125.48716993445494,'avg_time_signature':3.6235848253553895}};
 
-  // var featureAverages = JSON.parse(featureAveragesStr);
 
-  console.log("Inside featureAveragesGet, sending featureAverages: " +featureAverages);
-  res.status(200).send(featureAverages);
+  res.status(200).send(featureAveragesObj);
 }
 
 //////////////////////
 // Helper Functions //
 //////////////////////
 
-// songIdToFeaturesObj: A map/object/dictionary where the keys are the song id
-// and the values are the corresponding features for said song, also an object
-// which maps the feature name to its corresponding raw value
+// songIdToFeaturesObj:
+//   The actual object input to the Python ML Process
+//   A map/object/dictionary where the keys are the song id
+//     and the values are the corresponding features for said song, also an
+//     object which maps the feature name to its corresponding raw value
 function classifyFeatures(songIdToFeaturesObj) {
-  // The actual stringified input to the Python ML Process
-  var songIdToFeaturesObjStr = JSON.stringify(songIdToFeaturesObj);
-
   /* SPAWN PROCESS HERE: START */
 
 
 
-  // Spawn the process here using the above stringified value as input.
+  // Spawn the process here using the above object value as input.
   // Assign the output to variable 'classifierPopularity', as below:
   var songIdToPredictedPopularityObj = {'song_id_1': 92.229, 'song_id_2': 28.393};
 
@@ -154,7 +148,7 @@ function spawnPythonProcess(scriptPath) {
     var process = spawn('python3',[scriptPath]);
     process.stdout.on('data', function(data) {
       console.log("Received: \n" +data);
-      featureAverages = data;
+      featureAveragesObj = data;
     });
 }
 
