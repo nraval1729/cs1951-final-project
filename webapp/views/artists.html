@@ -36,6 +36,7 @@
 				        <li><a href="/">Songs</a></li>
 				        <li><a href="genres">Genres</a></li>
 						<li class="active"><a href="#">Artists <span class="sr-only">(current)</span></a></li>
+						<li><a href="explore">Explore</a></li>
 				      </ul>
 				    </div><!-- /.navbar-collapse -->
 				  </div><!-- /.container-fluid -->
@@ -45,9 +46,9 @@
 			<div class="row">
 				<div class="col-sm-12">
 					<div class="input-group">
-						<span class="year-range-title">Select a year range: </span>
-						<input id="year-range-slider" data-slider-id='year-range-slider' type="text" data-slider-min="1950" data-slider-max="2000" data-slider-step="10" data-slider-value="1950"/>
-		        <button id="year-range-button" type="button" class="btn btn-primary btn-xs">Enter</button>
+						<span class="range-title">Select a year range: </span>
+						<input class="range-slider" data-slider-id="range-slider" type="text" data-slider-min="1950" data-slider-max="2000" data-slider-step="10" data-slider-value="1950"/>
+		        		<button class="range-button" type="button" class="btn btn-primary btn-xs">Enter</button>
 					</div>
 				</div>
 				<div id="artist_chart" class="col-sm-12"></div>
