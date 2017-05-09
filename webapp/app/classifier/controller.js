@@ -21,6 +21,7 @@ var featureAveragesObj;
 // Route Functions //
 /////////////////////
 
+// Spawn the two python processes
 launchSendPopularUnpopularAverages();
 
 // Given the raw feature values for a random Spotify song, classify its
@@ -95,7 +96,6 @@ function featureAveragesGet(req, res) {
   // The output from the Python process will be an object with 2 key-value pairs: popular and unpopular, mapped to objects with the averages for each feature
 
   // var featureAveragesObj = {'popular': {'avg_song_hotness':0.4541682036148893,'avg_artist_hotness':0.4171302102545193,'avg_duration':247.54609482734062,'avg_key':5.33493175949834,'avg_loudness':-9.42896972448431,'avg_mode':0.6634508980506767,'avg_tempo':125.48716993445494,'avg_time_signature':3.6235848253553895}, 'unpopular': {'avg_song_hotness':0.4541682036148893,'avg_artist_hotness':0.4171302102545193,'avg_duration':247.54609482734062,'avg_key':5.33493175949834,'avg_loudness':-9.42896972448431,'avg_mode':0.6634508980506767,'avg_tempo':125.48716993445494,'avg_time_signature':3.6235848253553895}};
-
 
   res.status(200).send(featureAveragesObj);
 }
