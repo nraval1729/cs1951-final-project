@@ -15,9 +15,13 @@ module.exports = {
   featureAveragesGet: featureAveragesGet
 }
 
+var featureAverages;
+
 /////////////////////
 // Route Functions //
 /////////////////////
+
+launchSendPopularUnpopularAverages();
 
 // Given the raw feature values for a random Spotify song, classify its
 // popularity by our classification algorithm
@@ -90,14 +94,15 @@ function featureAveragesGet(req, res) {
 
   // The output from the Python process
   // Will be the stringified array of 2 JSON objects. The 0-index object will be the popular feature averages and the 1-index object will be the unpopular feature averages. Or vice-versa. Order doesn't really matter, just make sure it's documented.
-  var featureAveragesStr = '{"popular": {"avg_song_hotness":0.4541682036148893,"avg_artist_hotness":0.4171302102545193,"avg_duration":247.54609482734062,"avg_key":5.33493175949834,"avg_loudness":-9.42896972448431,"avg_mode":0.6634508980506767,"avg_tempo":125.48716993445494,"avg_time_signature":3.6235848253553895}, "unpopular": {"avg_song_hotness":0.4541682036148893,"avg_artist_hotness":0.4171302102545193,"avg_duration":247.54609482734062,"avg_key":5.33493175949834,"avg_loudness":-9.42896972448431,"avg_mode":0.6634508980506767,"avg_tempo":125.48716993445494,"avg_time_signature":3.6235848253553895}}';
+  // var featureAveragesStr = '{"popular": {"avg_song_hotness":0.4541682036148893,"avg_artist_hotness":0.4171302102545193,"avg_duration":247.54609482734062,"avg_key":5.33493175949834,"avg_loudness":-9.42896972448431,"avg_mode":0.6634508980506767,"avg_tempo":125.48716993445494,"avg_time_signature":3.6235848253553895}, "unpopular": {"avg_song_hotness":0.4541682036148893,"avg_artist_hotness":0.4171302102545193,"avg_duration":247.54609482734062,"avg_key":5.33493175949834,"avg_loudness":-9.42896972448431,"avg_mode":0.6634508980506767,"avg_tempo":125.48716993445494,"avg_time_signature":3.6235848253553895}}';
 
   // An important side note: make sure keys in the JSON string are surrounded by double-quote literals, else JSON.parse() will throw an error
 
   /* SPAWN PROCESS HERE: END */
 
-  var featureAverages = JSON.parse(featureAveragesStr);
+  // var featureAverages = JSON.parse(featureAveragesStr);
 
+  console.log("Inside featureAveragesGet, sending featureAverages: " +featureAverages);
   res.status(200).send(featureAverages);
 }
 
@@ -143,4 +148,17 @@ function sqlResults(statement, params) {
       }
     });
   });
+}
+
+function spawnPythonProcess(scriptPath) {
+    var process = spawn('python3',[scriptPath]);
+    process.stdout.on('data', function(data) {
+      console.log("Received: \n" +data);
+      featureAverages = data;
+    });
+}
+
+function launchSendPopularUnpopularAverages() {
+  var filePath = __dirname + "/../../../scripts/send_popular_unpopular.py";
+  spawnPythonProcess(filePath);
 }
