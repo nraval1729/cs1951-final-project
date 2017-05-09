@@ -34,7 +34,7 @@ def choose_query(useGenre, useDance, useEnergy, useLoudness, useArtist):
     if useArtist:
         query += " artist_hotness,"
 
-    query += " tempo, key, tempo * mode, mode, duration, time_signature  FROM songs ORDER BY track_id"
+    query += " tempo, key, tempo * key, mode, duration, time_signature  FROM songs ORDER BY track_id"
 
     return query
 
@@ -54,15 +54,15 @@ def load_songs(useGenre, useDance, useEnergy, useLoudness, useArtist, training, 
     query = choose_query(useGenre, useDance, useEnergy, useLoudness, useArtist)
 
     if training:
-        query += " LIMIT 10000"
+        query += " LIMIT 15000"
     else:
-        query += " LIMIT 2000 OFFSET 10000"
+        query += " LIMIT 4000 OFFSET 15000"
 
     print (query)
     for song in c.execute(query):
         #print (song)
         if (song[0] and not math.isnan(float(song[0]))):
-           
+
 
             #GENRE Features
             if (useGenre):
@@ -70,7 +70,7 @@ def load_songs(useGenre, useDance, useEnergy, useLoudness, useArtist, training, 
                 genre_features = ([0] * len(genre_list))
                 features_combine = features[:]
                 features_combine.extend(genre_features)
-                
+
                 genres = song[1].split(',')
                 if (song[1]):
                     for g in genres:
@@ -122,8 +122,8 @@ def main():
     count = 0.0
     training_features2, training_labels2 = load_songs(False, False, False, True, True, True, False)
 
-    average_popular = {"artist_popularity" : 0, "loudness" : 0, "tempo":  0, "key": 0, "tempo * mode": 0, "mode" : 0, "duration": 0, "time_signature": 0}
-    average_unpopular = {"artist_popularity" : 0, "loudness" : 0, "tempo":  0, "key": 0, "tempo * mode": 0, "mode" : 0, "duration": 0, "time_signature": 0}
+    average_popular = {"artist_popularity" : 0, "loudness" : 0, "tempo":  0, "key": 0, "tempo * key": 0, "mode" : 0, "duration": 0, "time_signature": 0}
+    average_unpopular = {"artist_popularity" : 0, "loudness" : 0, "tempo":  0, "key": 0, "tempo * key": 0, "mode" : 0, "duration": 0, "time_signature": 0}
 
     for i in range(0, len(training_labels)):
         if training_labels[i] == 1:
@@ -133,7 +133,7 @@ def main():
             average_popular["loudness"] += training_features[i][0]
             average_popular["tempo"] += training_features[i][2]
             average_popular["key"] += training_features[i][3]
-            average_popular["tempo * mode"] += training_features[i][4]
+            average_popular["tempo * key"] += training_features[i][4]
             average_popular["mode"] += training_features[i][5]
             average_popular["duration"] += training_features[i][6]
             average_popular["time_signature"] += training_features[i][7]
@@ -142,7 +142,7 @@ def main():
             average_unpopular["loudness"] += training_features[i][0]
             average_unpopular["tempo"] += training_features[i][2]
             average_unpopular["key"] += training_features[i][3]
-            average_unpopular["tempo * mode"] += training_features[i][4]
+            average_unpopular["tempo * key"] += training_features[i][4]
             average_unpopular["mode"] += training_features[i][5]
             average_unpopular["duration"] += training_features[i][6]
             average_unpopular["time_signature"] += training_features[i][7]
@@ -153,7 +153,7 @@ def main():
     average_popular["loudness"] /= len_label
     average_popular["tempo"] /= len_label
     average_popular["key"] /= len_label
-    average_popular["tempo * mode"] /= len_label
+    average_popular["tempo * key"] /= len_label
     average_popular["mode"] /= len_label
     average_popular["duration"] /= len_label
     average_popular["time_signature"] /= len_label
@@ -162,7 +162,7 @@ def main():
     average_unpopular["loudness"] /= len_label
     average_unpopular["tempo"] /= len_label
     average_unpopular["key"] /= len_label
-    average_unpopular["tempo * mode"] /= len_label
+    average_unpopular["tempo * key"] /= len_label
     average_unpopular["mode"] /= len_label
     average_unpopular["duration"] /= len_label
     average_unpopular["time_signature"] /= len_label
@@ -180,7 +180,7 @@ def main():
     # NOTE: Be sure to name the variable for your classifier "classifier" so that our stencil works for you!
     classifier1 = SVC(kernel="rbf")
     classifier2 = SVC(kernel="rbf")
-    
+
     # TODO: Train your classifier using 'fit'
     classifier1.fit(training_features, training_labels)
     classifier2.fit(training_features2, training_labels2)
@@ -210,7 +210,7 @@ def main():
     ############################################################
 
 
-if __name__ == '__main__':   
+if __name__ == '__main__':
     main()
 
     # songs_features, songs_popularity = load_songs()
