@@ -47,29 +47,17 @@ a {
 /****/
 /*D3*/
 /****/
-
-.chart rect {
-  fill: steelblue;
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 2px;
 }
 
-.chart text {
-  fill: black;
-  font: 10px sans-serif;
-  text-anchor: end;
-}
-
-.hover-over-tooltip {
-  color: white;
-  font: 10px sans-serif;
-  position: absolute;
-  width: 100px;
-  height: 35px;
-  pointer-events: none;
-  z-index: 100;
-  background-color: #204c6b;
-  padding: 3px;
-  border-radius: 10px;
-  text-align: center;
+.chart rect:hover {
+  fill: orangered;
 }
 
 #genre_chart {

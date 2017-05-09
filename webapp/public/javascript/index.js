@@ -38,92 +38,8 @@ var searchSpotter = true;
     var songId = $(this).attr('song_id');
 
     if (searchSpotter) {
-      $.post('/songLikes', {songId: songId}, function(data) {
-
-        ////////
-        // D3 //
-        ////////
-
-        var parseStringToDate = d3.timeParse("%Y-%m-%d");
-        var parseDateToString = d3.timeFormat("%Y-%m-%d");
-
-        data.forEach(function(d) {
-          d.creation_date = parseStringToDate(d.creation_date); // TODO: chop out time and time zone
-          d.likes = d.likes;
-        });
-
-        var width = 890;
-        var height = 450;
-
-        var x = d3.scaleTime()
-        .rangeRound([0, width])
-        .domain(d3.extent(data, function(d) { return(d.creation_date); }));
-
-        var y = d3.scaleLinear()
-        .rangeRound([height, 0])
-        .domain(d3.extent(data, function(d) { return d.likes; }));
-
-        // Line to draw
-        var line = d3.line()
-        .x(function(d) { return x(d.creation_date); })
-        .y(function(d) { return y(d.likes); })
-
-        var chart = d3.select('.chart')
-        .append('g').attr('transform', 'translate(100, 20)');
-
-        // Hover over (create hover over item)
-        var tooltip = d3.select('body')
-        .append('div')
-        .attr('class', 'hover-over-tooltip')
-        .style('opacity', 0)
-
-        // X-axis
-        chart.append('g')
-        .attr('transform', 'translate(0,' + height + ')')
-        .call(d3.axisBottom(x));
-
-        // Y-axis
-        chart.append('g')
-        .call(d3.axisLeft(y))
-        .append('text')
-        .attr('fill', '#000')
-        .attr('transform', 'rotate(-90)')
-        .attr('y', 6)
-        .attr('dy', '0.71em')
-        .attr('text-anchor', 'end')
-        .text('Likes');
-
-        // Draw line data
-        chart.append('path')
-        .datum(data)
-        .attr('fill', 'none')
-        .attr('stroke', 'steelblue')
-        .attr('stroke-linejoin', 'round')
-        .attr('stroke-linecap', 'round')
-        .attr('stroke-width', 1.5)
-        .attr('d', line);
-
-        // Draw plots
-        chart.selectAll('dot')
-        .data(data)
-        .enter().append('circle')
-        .attr('r', 2.5)
-        .attr('cx', function(d) { return x(d.creation_date); })
-        .attr('cy', function(d) { return y(d.likes); })
-        .on('mouseover', function(d) {
-          tooltip.transition()
-          .duration(200)
-          .style('opacity', 1);
-          tooltip.html(parseDateToString(d.creation_date) + '<br />' + d.likes + ' likes')
-          .style('left', (d3.event.pageX + 5) + 'px')
-          .style('top', (d3.event.pageY - 28) + 'px');
-        })
-        .on('mouseout', function(d) {
-          tooltip.transition()
-          .duration(600)
-          .style('opacity', 0);
-        });
-      });
+      // Handle searching initial database. should be same visualization as searching spotify api, but with
+      // different features
     } else {
       var spotifyFeatures;
       $.get("/authenticate", function(accessToken) {
@@ -152,10 +68,16 @@ var searchSpotter = true;
                     desiredData.time_signature = spotifyFeatures.time_signature;
 
                     console.log(songPopularity, desiredData);
+                    // create d3 bar graph with features as x-axis: artist_hotness, loudness^2, tempo, key, tempo * mode, mode, duration, time_signature
+                    createBarGraph(desiredData);
+
+                    // IN HERE, feed spotify data into endpoint that returns
+                    // average feature values for each feature
                   }
-                })
+                });
               }
-            })
+            });
+
           }
         });
       });
@@ -257,6 +179,140 @@ var searchSpotter = true;
     }
 
     $("#song_search").attr("placeholder", placeholderText);
-  }
+  };
+
+  // Takes in feature data and creates a bar graph that compares the selected song's features to that
+  // of the average features of popular and unpopular songs.
+  function createBarGraph(data) {
+    // Clear chart svg.
+    $('.chart').empty();
+
+    ////////////////////
+    // NORMALIZE DATA //
+    ////////////////////
+    var NUMFEATURES = 7
+    // Set up arrays for feature labels/values
+    var featureLabels = Object.keys(data);
+    var featureValues = Object.values(data);
+
+    var DUMMY_DATA = [0.5, 0.3, 0.8];
+    // Mapping of feature labels to curr song feature and popular/unpopular
+    // feature average (DUMMY DATA)
+    var features =  []
+    for (var i = 0; i < NUMFEATURES; i++) {
+      for (var j = 0; j < 3; j++) {
+        var temp = {};
+        temp['feature'] = featureLabels[i];
+        temp['index'] = j;
+        temp['normValue'] = DUMMY_DATA[j];
+        temp['value'] = 1000000;
+        switch(j) {
+          case 0:
+            temp['label'] = 'Song Value: '
+            break;
+          case 1:
+            temp['label'] = 'Popular Song Average: '
+            break;
+          case 2:
+            temp['label'] = 'Unpopular Song Average: '
+            break;
+        }
+        features.push(temp);
+      }
+    }
+
+    console.log(features);
+
+    // TODO: NORMALIZE DATA
+    // var normalizedFeatureValues = [];
+    // Normalize y-values for each feature
+    // for (var i = 0; i < featureValues.length; i++) {
+    //   normalizedFeatureValues.push(normalize(featureValues[i], featureValues));
+    // };
+
+    ////////
+    // D3 //
+    ////////
+
+    // Chart dimensions
+    var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 50};
+    var width = 900 - margin.right;
+    var height = 500 - margin.top - margin.bottom;
+
+    // Create the SVG container
+    var svg = d3.select(".chart").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr('transform', 'translate(' + margin.left + ',0.0)');
+
+    // Initialize axis
+    var x0 = d3.scaleBand()
+      .domain(featureLabels)
+      .rangeRound([0, width])
+      .paddingInner(0.1);
+    var x1 = d3.scaleBand()
+      .domain([0, 1, 2])
+      .rangeRound([0, x0.bandwidth()])
+      .padding(0.05)
+    var y = d3.scaleLinear()
+      .rangeRound([height, 0])
+      .domain([0.0, 1.0]);
+    var z = d3.scaleOrdinal()
+      .range(["#98abc5", "#6b486b", "#ff8c00"]);
+
+    // Tooltip
+    var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.label + d.value; });
+    svg.call(tip);
+
+    // Create pixel spacing for x-axis for features
+    var featureLabelPixels = [];
+    var currPixelVal = 0;
+    for (var i = 0; i < NUMFEATURES; i++) {
+      featureLabelPixels.push(currPixelVal)
+      currPixelVal += width / NUMFEATURES;
+    }
+
+
+    svg.append('g')
+      .attr('class', 'axis')
+      .attr('transform', 'translate(0,' + height + ')')
+      .call(d3.axisBottom(x0))
+      .selectAll(".tick text")
+      .style("text-anchor", "middle");
+
+    // NO NEED TO DRAW Y AXIS.
+    // svg.append('g')
+    //   .attr('class', 'axis')
+    //   .call(d3.axisLeft(y));
+
+    svg.append('g')
+      .selectAll('g')
+      .data(features)
+      .enter().append('g')
+        .attr('transform', function(d) {
+          return 'translate(' + x0(d.feature) + ',0)';
+        })
+      .selectAll('rect')
+      .data(features)
+      .enter().append('rect')
+        .attr('x', function(d) {
+          return x1(d.index);
+        })
+        .attr('y', function(d) {
+          return y(d.normValue);
+        })
+        .attr('width', x1.bandwidth())
+        .attr('height', function(d) { return height - y(d.normValue); })
+        .attr('fill', function(d) { return z(d.index) })
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide);
+
+  };
+
+  // Normalizes data to fit between [0, 1]
+  function normalize(currValue, values) {
+    return (currValue - Math.min(...values)) / (Math.max(...values) - Math.min(...values));
+  };
 
 });
