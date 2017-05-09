@@ -147,7 +147,7 @@ function sqlResults(statement, params) {
 function spawnPythonProcess(scriptPath) {
     var process = spawn('python3',[scriptPath]);
     process.stdout.on('data', function(data) {
-      console.log("Received: \n" +data);
+      // console.log("Received: \n" +data);
       featureAveragesObj = data;
     });
 }
