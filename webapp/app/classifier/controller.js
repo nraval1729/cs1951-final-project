@@ -7,6 +7,7 @@ var path = require('path');
 var dbPath = path.resolve(__dirname, '..', 'database.db');
 
 var db = new sqlite3.Database(dbPath, sqlite3.OPEN_READONLY);
+var spawn = require('child_process').spawn;
 
 module.exports = {
   classifyNewSongPost: classifyNewSongPost,
