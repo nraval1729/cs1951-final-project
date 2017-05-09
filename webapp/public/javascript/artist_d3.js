@@ -1,13 +1,13 @@
 $(document).ready(function() {
   // Instantiate slider
-  var slider = $('#year-range-slider').slider({
+  var slider = $('.range-slider').slider({
   	formatter: function(beginningYear) {
       endingYear = parseInt(beginningYear) + 10
   		return beginningYear + ' - ' + endingYear;
   	}
   });
 
-  $('#year-range-button').click(function() {
+  $('.range-button').click(function() {
     $('#artist_chart svg g').empty()
     getArtistData(slider.slider('getValue'));
   });

@@ -1,13 +1,13 @@
 $(document).ready(function() {
   // Instantiate slider
-  var slider = $('#year-range-slider').slider({
+  var slider = $('.range-slider').slider({
   	formatter: function(beginningYear) {
       endingYear = parseInt(beginningYear) + 10
   		return beginningYear + ' - ' + endingYear;
   	}
   });
 
-  $('#year-range-button').click(function() {
+  $('.range-button').click(function() {
     $('#genre_chart svg g').empty()
     console.log(slider.slider('getValue'))
     getGenreData(slider.slider('getValue'));
