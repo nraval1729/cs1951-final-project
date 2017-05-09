@@ -63,24 +63,21 @@ function* exploreSpotterGenerator(req, res) {
 
   var results = yield* runSqlQuery(getNRandomRowsQuery, getNRandomRowsParams);
 
-  var songIdToFeaturesArray = [];  
+  var songIdToFeaturesObj = {};
   for (var i = 0; i < results.length; i++) {
     var songId = results[i]['song_id'];
     delete(results[i]['song_id']);
 
-    var songIdToFeatures = {};
     songIdToFeatures[songId] = results[i];
-
-    songIdToFeaturesArray.push(songIdToFeatures);
   }
 
-  var predictedPopularityArray = classifyFeatures(songIdToFeaturesArray);
+  var songIdToPredictedPopularityObj = classifyFeatures(songIdToFeaturesObj);
 
-  for (var songId in predictedPopularityArray) {
-
+  for (var songId in songIdToPredictedPopularityObj) {
+    songIdToFeaturesObj[songId]['predicted_song_hotness'] = songIdToPredictedPopularityObj[songId];
   }
 
-  res.status(200).send();
+  res.status(200).send(songIdToFeaturesObj);
 }
 
 // Get the popular and unpopular averages for all classifier features
