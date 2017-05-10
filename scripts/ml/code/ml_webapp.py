@@ -180,8 +180,8 @@ def main():
     ##### TRAIN THE MODEL ######################################
     # Initialize the corresponding type of the classifier
     # NOTE: Be sure to name the variable for your classifier "classifier" so that our stencil works for you!
-    classifier1 = SVC(kernel="linear", C=2)
-    classifier2 = SVC(kernel="linear", C=2)
+    classifier1 = SVC(kernel="rbf", C=5, probability=True)
+    classifier2 = SVC(kernel="rbf", C=5, probability=True)
 
     # TODO: Train your classifier using 'fit'
     classifier1.fit(training_features, training_labels)
@@ -194,10 +194,9 @@ def main():
     # TODO: Print training mean accuracy using 'score'
     training_score1 = classifier1.score(training_features, training_labels)
     training_score2 = classifier2.score(training_features2, training_labels2)
-    #predicted_probs = classifier.predict_proba(training_labels)
+  
 
     #print (classifier.coef_)
-    #print (predicted_probs)
 
     print('training mean accuracy LogReg:', training_score1)
     print('training mean accuracy LogReg non binary:', training_score2)
@@ -207,6 +206,8 @@ def main():
 
     pickle.dump(classifier1, open("../../../node/binary_classifier2.p", "wb"))
     pickle.dump(classifier2, open("../../../node/nonbinary_classifier2.p", "wb"))
+    predicted_probs = classifier2.predict(training_labels[0])
+    print (predicted_probs)
 
     ############################################################
 
