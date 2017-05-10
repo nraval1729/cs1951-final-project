@@ -3,13 +3,12 @@ var width = 600;//960 - margin.right;
 var height = 600 - margin.top - margin.bottom;//500 - margin.top - margin.bottom;
 
 var ARTIST_HOTNESS_DOMAIN = [0, 1.08]; // 0, 1.08
-var DURATION_DOMAIN = [0, 1000]; // 0.68, 992.05
-var KEY_DOMAIN = [0, 10]; // 0, 9
-var LOUDNESS_DOMAIN = [-1, 5]; // -0.18, 4.32
-var MODE_DOMAIN = [0, 1]; // 0, 1
-var SONG_HOTNESS_DOMAIN = [0, 1]; // 0.19, 1.00
-var TEMPO_DOMAIN = [0, 100]; // 0.00, 99.99
-var TIME_SIGNATURE_DOMAIN = [0, 10]; // 0, 7
+var DURATION_DOMAIN = [0.68, 3007.74]; // 0.68, 992.05
+var KEY_DOMAIN = [0, 11.0]; // 0, 9
+var LOUDNESS_DOMAIN = [-48.06, 4.32]; // -0.18, 4.32
+var MODE_DOMAIN = [0, 1.0]; // 0, 1
+var TEMPO_DOMAIN = [0, 263.52]; // 0.00, 99.99
+var TIME_SIGNATURE_DOMAIN = [0, 7.0]; // 0, 7
 
 function getFeatureDomain(feature) {
   if (feature === 'artist_hotness') {
@@ -83,6 +82,8 @@ $(document).ready(function() {
     var sampleSize = $('#sample-size').val();
 
     $.post('/classifier/exploreSpotter', {sampleSize: sampleSize}, function(data) {
+      console.log(data);
+
       var parsedData = [];
       for (var key in data) {
         parsedData.push(data[key]);
@@ -92,8 +93,8 @@ $(document).ready(function() {
       var featureX = $('#feature-x').val();
       var featureY = $('#feature-y').val();
 
-      var xScale = d3.scaleLinear().domain(getFeatureDomain(featureX)).range([0, width]);
-      var yScale = d3.scaleLinear().domain(getFeatureDomain(featureY)).range([height, 0]);
+      var xScale = d3.scaleLinear().domain(getFeatureDomain(featureX)).range([0, width - margin.top]);
+      var yScale = d3.scaleLinear().domain(getFeatureDomain(featureY)).range([height - margin.top, 0]);
       var colorScale = d3.scaleOrdinal([0, 1, 2, 3, 4, 5, 6]);
 
       var xAxis = d3.axisBottom(xScale);
@@ -130,8 +131,8 @@ $(document).ready(function() {
                 .call(colorDot);
 
       function position(dot, featureX, featureY) {
-        dot.attr('cx', function(d) { return xScale(d[featureX]); })
-           .attr('cy', function(d) { return yScale(d[featureY]); })
+        dot.attr('cx', function(d) { console.log(featureX, d[featureX]); return xScale(d[featureX]); })
+           .attr('cy', function(d) { console.log(featureY, d[featureY]); return yScale(d[featureY]); })
            .attr('r', function(d) { return 5; });
       }
 
