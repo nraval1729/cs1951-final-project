@@ -7,6 +7,7 @@ import argparse
 from collections import defaultdict
 import util
 import numpy
+import json
 import math
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.metrics import confusion_matrix
@@ -17,6 +18,12 @@ from sklearn.svm import SVC
 from tokenizer import Tokenizer
 
 cwd = os.getcwd()
+
+def get_features_from_stdin():
+	featureList = sys.stdin.readlines()
+	print("THIS IS THE FEATURE JSON: ", featureList)
+
+	return json.loads(lines[0])
 
 def get_pickled_files():
 	bc = pickle.load(open(cwd + "/../../node/binary_classifier.p", "rb"))
@@ -31,6 +38,12 @@ def get_predictions(bc, nbc):
 
 
 def main():
+
+	features_list = get_features_from_stdin()
+
 	binary_classifier, nonbinary_classifier = get_pickled_files()
 	
 	predictions = get_predictions(binary_classifier, nonbinary_classifier)
+
+if __name__ == "__main__":
+	main()
