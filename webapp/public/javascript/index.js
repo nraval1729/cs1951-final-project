@@ -69,21 +69,14 @@ $(document).ready(function() {
                   desiredData.tempoXkey = spotifyFeatures.tempo * spotifyFeatures.key;
                   desiredData.time_signature = spotifyFeatures.time_signature;
 
-                  ////////////////////////////
-                  // NISARG LOOK HERE!!!!!! //
-                  ////////////////////////////
+                  console.log('hitting classifier');
+                  $.post('/classifier/classifyNewSong', desiredData, function(data) {
+                    console.log("OUTPUT FROM CONTROLLER: " +data);
 
-                  // $.post('/classifier/classifyNewSong', desiredData, function(data) {
-                    // TODO: call to nisarg's function here
-                    // return object will be a single value
-                    // {
-                    //  popularity: 12
-                    // }
-                  // });
-                  // create d3 bar graph with features as x-axis: artist_hotness, loudness^2, tempo, key, tempo * mode, mode, duration, time_signature
-                  // IN HERE, feed spotify data into endpoint that returns
-                  // average feature values for each feature
-                  createBarGraph(desiredData);
+                    createBarGraph(desiredData);
+
+                  });
+
                 }
               });
             }
@@ -187,6 +180,8 @@ $(document).ready(function() {
   // Takes in feature data and creates a bar graph that compares the selected song's features to that
   // of the average features of popular and unpopular songs.
   function createBarGraph(data) {
+    console.log('create bar graph');
+    console.log(data);
     // Clear chart svg.
     $('.chart').empty();
 
@@ -301,7 +296,6 @@ $(document).ready(function() {
 
     bars.selectAll('rect')
       .data(function(d) {
-        console.log(d)
         return d.bars
       })
       .enter().append('rect')
