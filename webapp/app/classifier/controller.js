@@ -30,7 +30,7 @@ launchSendPopularUnpopularAverages();
 function classifyNewSongPost(req, res) {
   var songIdToFeaturesObj = {};
   songIdToFeaturesObj.artist_hotness = req.body.artist_popularity;
-  songIdToFeaturesObj.duration = req.body.duration/1000;
+  songIdToFeaturesObj.duration = req.body.duration;
   songIdToFeaturesObj.key = req.body.key;
   songIdToFeaturesObj.loudness = req.body.loudness;
   songIdToFeaturesObj.mode = req.body.mode;
