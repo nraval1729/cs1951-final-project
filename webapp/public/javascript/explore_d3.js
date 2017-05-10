@@ -52,19 +52,19 @@ function getFeatureLabel(feature) {
 }
 
 function colorDot(dot) {
-  dot.attr("stroke", "black")
-     .attr("stroke-width", 1)
-     .attr("fill", function(d) {
+  dot.attr('stroke', 'black')
+     .attr('stroke-width', 1)
+     .attr('fill', function(d) {
         var isPopular = parseFloat(d.song_hotness) > 0.55;
         if (isPopular) {
           console.log('red')
-          return "gold";
+          return 'gold';
         } else {
           console.log('blue')
-          return "mediumblue"
+          return 'mediumblue'
         }
      })
-     .attr("fill-opacity", 0.5);
+     .attr('fill-opacity', 0.5);
 }
 
 $(document).ready(function() {
@@ -122,17 +122,17 @@ $(document).ready(function() {
                           .attr('transform', 'translate(10, 100)rotate(270)')
                           .text(getFeatureLabel(featureY));
 
-      var dot = svg.append("g")
-                .selectAll("g")
+      var dot = svg.append('g')
+                .selectAll('g')
                 .data(data)
                 .enter()
-                .append("circle")
+                .append('circle')
                 .call(colorDot);
 
       function position(dot, featureX, featureY) {
-        dot.attr("cx", function(d) { return xScale(d[featureX]); })
-           .attr("cy", function(d) { return yScale(d[featureY]); })
-           .attr("r", function(d) { return 5; });
+        dot.attr('cx', function(d) { return xScale(d[featureX]); })
+           .attr('cy', function(d) { return yScale(d[featureY]); })
+           .attr('r', function(d) { return 5; });
       }
 
       position(dot, featureX, featureY);
