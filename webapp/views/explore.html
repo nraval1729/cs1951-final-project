@@ -48,7 +48,7 @@
 					<span class="range-title">Select a sample size</span>
 				</div>
 				<div class="col-sm-6">
-					<input class="range-slider" data-slider-id="range-slider" type="text" data-slider-min="1" data-slider-max="100" data-slider-step="1" data-slider-value="20"/>
+					<input id="sample-size" class="range-slider" data-slider-id="range-slider" type="text" data-slider-min="1" data-slider-max="100" data-slider-step="1" data-slider-value="20"/>
 				</div>
 			</div>
 
@@ -57,8 +57,15 @@
 					<span>Feature X</span>
 				</div>
 				<div class="col-sm-6">
-					<select name="" id="">
-						<option value="">Test</option>
+					<select name="Feature X" id="feature-x">
+						<option value="artist_hotness">Artist Hotness</option>
+						<option value="duration">Duration</option>
+						<option value="key">Key</option>
+						<option value="loudness">Loudness</option>
+						<option value="mode">Mode</option>
+						<option value="song_hotness">Song Hotness</option>
+						<option value="tempo">Tempo</option>
+						<option value="time_signature">Time Signature</option>
 					</select>
 				</div>
 			</div>
@@ -68,15 +75,40 @@
 					<span>Feature Y</span>
 				</div>
 				<div class="col-sm-6">
-					<select name="" id="">
-						<option value="">Test</option>
+					<select name="Feature Y" id="feature-y">
+						<option value="artist_hotness">Artist Hotness</option>
+						<option value="duration">Duration</option>
+						<option value="key">Key</option>
+						<option value="loudness">Loudness</option>
+						<option value="mode">Mode</option>
+						<option value="song_hotness">Song Hotness</option>
+						<option value="tempo">Tempo</option>
+						<option value="time_signature">Time Signature</option>
 					</select>
 				</div>
 			</div>
 
 			<div class="row">
 				<div class="col-sm-offset-3 col-sm-6 text-center">
-					<button>Generate</button>
+					<button id="generate">Generate</button>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-sm-offset-3">
+					<p id="vis"></p>
+				</div>
+			</div>
+
+			<div class="row">
+				<div class="col-sm-6 text-right">
+					<span>Display</span>
+				</div>
+				<div class="col-sm-6">
+					<select name="" id="">
+						<option value="">Predicted Data</option>
+						<option value="">Actual Data</option>
+					</select>
 				</div>
 			</div>
 

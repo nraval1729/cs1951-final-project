@@ -74,7 +74,7 @@ function* exploreSpotterGenerator(req, res) {
     var songId = results[i]['song_id'];
     delete(results[i]['song_id']);
 
-    songIdToFeatures[songId] = results[i];
+    songIdToFeaturesObj[songId] = results[i];
   }
 
   var songIdToPredictedPopularityObj = classifyFeatures(songIdToFeaturesObj);
@@ -101,9 +101,7 @@ function featureAveragesGet(req, res) {
 //     and the values are the corresponding features for said song, also an
 //     object which maps the feature name to its corresponding raw value
 function classifyFeatures(songIdToFeaturesObj, response) {
-
-
-  console.log("songIdToFeaturesObj: " +songIdToFeaturesObj);
+  console.log("songIdToFeaturesObj: " + songIdToFeaturesObj);
   console.log("KEYS: " +Object.keys(songIdToFeaturesObj));
 
   var featuresArray = [];
@@ -119,7 +117,6 @@ function classifyFeatures(songIdToFeaturesObj, response) {
 
   console.log("features array: ");
   console.log(JSON.stringify(featuresArray));
-
 
   // Send the features to the process
   var filePath = __dirname + "/../../../scripts/send_classifier_output.py";
@@ -163,7 +160,7 @@ function launchSendPopularUnpopularAverages() {
   var filePath = __dirname + "/../../../scripts/send_popular_unpopular.py";
   var proc = spawn('python3',[filePath]);
   proc.stdout.on('data', function(data) {
-      // console.log("Received: \n" +data);
-      featureAveragesObj = data;
-    });
-  }
+    // console.log("Received: \n" +data);
+    featureAveragesObj = data;
+  });
+}
