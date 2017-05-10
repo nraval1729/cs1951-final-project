@@ -24,9 +24,10 @@ def flush_output():
 
 def get_features_from_stdin():
 	line = sys.stdin.readline()
-	feature_list = [float(i) for i in json.loads(line)]
+	feature_list = numpy.asarray([float(i) for i in json.loads(line)]).reshape(1,-1)
 
 	return feature_list
+	# return json.loads(line)
 
 def get_pickled_files():
 	bc = pickle.load(open(cwd + "/../../node/binary_classifier.p", "rb"))
@@ -37,8 +38,8 @@ def get_pickled_files():
 
 def get_predictions(bc, nbc, fl):
 	predictions = {}
-	predictions["binary"] = bc.predict(fl)
-	predictions["non_binary"] = nbc.predict(fl)
+	predictions["binary"] = str(bc.predict(fl)[0])
+	predictions["non_binary"] = str(nbc.predict(fl)[0])
 
 	return predictions
 
