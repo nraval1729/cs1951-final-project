@@ -6,6 +6,7 @@
 		<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 		<script src="https://d3js.org/d3.v4.min.js"></script>
+		<script src="/javascript/d3.tip.js"></script>
 		<!-- <script src="https://github.com/JMPerez/spotify-web-api-js/blob/master/src/spotify-web-api.js"></script> --> <!-- worth looking into to clean up clutter -->
 		<script src="/javascript/index.js"></script>
 		<link href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css" rel="stylesheet">
@@ -41,13 +42,6 @@
 			</div>
 
 			<div class="row">
-				<div class="col-sm-5"></div>
-				<div class="col-sm-6">
-					<input id="search_type" type="checkbox" checked data-toggle="toggle" data-on="Search Spotter" data-off="Search Spotify" data-onstyle="primary" data-offstyle="success">
-				</div>
-			</div>
-
-			<div class="row">
 			  <div class="col-sm-12">
 			    <div class="input-group">
 			      <span class="input-group-addon">Search</span>
@@ -64,14 +58,12 @@
 			</div>
 
 			<div class="row">
-				<div class="col-sm-12 ">
+				<div class="col-sm-12" style="text-align: center">
 					<!-- To be completed with D3 via javascript -->
-				  <svg class="chart" width="1000" height="550"></svg>
+				  <div class="chart" width="1000" height="550"></div>
 
 				</div>
 			</div>
-
-
 
 		</div>
 	</body>

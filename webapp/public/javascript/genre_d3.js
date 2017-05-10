@@ -43,7 +43,6 @@ $(document).ready(function() {
   getGenreData(1950)
 
   function getGenreData(beginYear) {
-    console.log(beginYear);
     $.post('/genreData', {beginYear: beginYear}, function(data) {
       // Mapping of genre to [song_hotness, count_of_songs] to calculate average hotness
       genre_hotness_map = {};

@@ -6,18 +6,23 @@ var SPOTIFY_SEARCH_ENDPOINT = "https://api.spotify.com/v1/search";
 var curr_songs = {};
 var selected_song = {};
 var searchSpotter = true;
-  // Delay search until X milliseconds has elapsed from when user stops
-  // typing, so as not to get rate-limited by Spotify.
-  // https://stackoverflow.com/questions/1909441/how-to-delay-the-keyup-handler-until-the-user-stops-typing
-  var delay = (function() {
-    var timer = 0;
-    return function(callback, ms){
-      clearTimeout (timer);
-      timer = setTimeout(callback, ms);
-    };
-  })();
+// Delay search until X milliseconds has elapsed from when user stops
+// typing, so as not to get rate-limited by Spotify.
+// https://stackoverflow.com/questions/1909441/how-to-delay-the-keyup-handler-until-the-user-stops-typing
+var delay = (function() {
+  var timer = 0;
+  return function(callback, ms){
+    clearTimeout (timer);
+    timer = setTimeout(callback, ms);
+  };
+})();
 
-  $(document).ready(function() {
+$(document).ready(function() {
+  $.get('/classifier/featureAverages', function(data) {
+    featureValsDict = JSON.parse(data);
+  });
+
+
   // On initialization, hide suggestions list
   $("#sugs_list").hide();
 
@@ -37,130 +42,46 @@ var searchSpotter = true;
 
     var songId = $(this).attr('song_id');
 
-    if (searchSpotter) {
-      $.post('/songLikes', {songId: songId}, function(data) {
+    var spotifyFeatures;
+    $.get("/authenticate", function(accessToken) {
+      $.ajax({
+        url: "https://api.spotify.com/v1/audio-features/" + songId,
+        headers: {"Authorization": "Bearer " + accessToken},
+        success: function(features) {
+          spotifyFeatures = features;
+          $.ajax({
+            url: "https://api.spotify.com/v1/tracks/" + songId,
+            success: function(trackInfo) {
+              artistId = trackInfo['album']['artists'][0]['id'];
+              songPopularity = trackInfo['popularity'];
+              $.ajax({
+                url: "https://api.spotify.com/v1/artists/" + artistId,
+                success: function(artistInfo) {
+                  artistPopularity = artistInfo['popularity'];
 
-        ////////
-        // D3 //
-        ////////
+                  desiredData = {};
+                  desiredData.artist_popularity = artistPopularity / 100.0;
+                  desiredData.duration = spotifyFeatures.duration_ms / 1000.0;
+                  desiredData.key = spotifyFeatures.key;
+                  desiredData.loudness = spotifyFeatures.loudness;
+                  desiredData.mode = spotifyFeatures.mode;
+                  desiredData.tempo = spotifyFeatures.tempo;
+                  desiredData.tempoXkey = spotifyFeatures.tempo * spotifyFeatures.key;
+                  desiredData.time_signature = spotifyFeatures.time_signature;
 
-        var parseStringToDate = d3.timeParse("%Y-%m-%d");
-        var parseDateToString = d3.timeFormat("%Y-%m-%d");
+                  console.log('hitting classifier');
+                  $.post('/classifier/classifyNewSong', desiredData, function(data) {
+                    console.log("OUTPUT FROM CONTROLLER: " +data);
 
-        data.forEach(function(d) {
-          d.creation_date = parseStringToDate(d.creation_date); // TODO: chop out time and time zone
-          d.likes = d.likes;
-        });
-
-        var width = 890;
-        var height = 450;
-
-        var x = d3.scaleTime()
-        .rangeRound([0, width])
-        .domain(d3.extent(data, function(d) { return(d.creation_date); }));
-
-        var y = d3.scaleLinear()
-        .rangeRound([height, 0])
-        .domain(d3.extent(data, function(d) { return d.likes; }));
-
-        // Line to draw
-        var line = d3.line()
-        .x(function(d) { return x(d.creation_date); })
-        .y(function(d) { return y(d.likes); })
-
-        var chart = d3.select('.chart')
-        .append('g').attr('transform', 'translate(100, 20)');
-
-        // Hover over (create hover over item)
-        var tooltip = d3.select('body')
-        .append('div')
-        .attr('class', 'hover-over-tooltip')
-        .style('opacity', 0)
-
-        // X-axis
-        chart.append('g')
-        .attr('transform', 'translate(0,' + height + ')')
-        .call(d3.axisBottom(x));
-
-        // Y-axis
-        chart.append('g')
-        .call(d3.axisLeft(y))
-        .append('text')
-        .attr('fill', '#000')
-        .attr('transform', 'rotate(-90)')
-        .attr('y', 6)
-        .attr('dy', '0.71em')
-        .attr('text-anchor', 'end')
-        .text('Likes');
-
-        // Draw line data
-        chart.append('path')
-        .datum(data)
-        .attr('fill', 'none')
-        .attr('stroke', 'steelblue')
-        .attr('stroke-linejoin', 'round')
-        .attr('stroke-linecap', 'round')
-        .attr('stroke-width', 1.5)
-        .attr('d', line);
-
-        // Draw plots
-        chart.selectAll('dot')
-        .data(data)
-        .enter().append('circle')
-        .attr('r', 2.5)
-        .attr('cx', function(d) { return x(d.creation_date); })
-        .attr('cy', function(d) { return y(d.likes); })
-        .on('mouseover', function(d) {
-          tooltip.transition()
-          .duration(200)
-          .style('opacity', 1);
-          tooltip.html(parseDateToString(d.creation_date) + '<br />' + d.likes + ' likes')
-          .style('left', (d3.event.pageX + 5) + 'px')
-          .style('top', (d3.event.pageY - 28) + 'px');
-        })
-        .on('mouseout', function(d) {
-          tooltip.transition()
-          .duration(600)
-          .style('opacity', 0);
-        });
+                    createBarGraph(desiredData);
+                  });
+                }
+              });
+            }
+          });
+        }
       });
-    } else {
-      var spotifyFeatures;
-      $.get("/authenticate", function(accessToken) {
-        $.ajax({
-          url: "https://api.spotify.com/v1/audio-features/" + songId,
-          headers: {"Authorization": "Bearer " + accessToken},
-          success: function(features) {
-            spotifyFeatures = features;
-            $.ajax({
-              url: "https://api.spotify.com/v1/tracks/" + songId,
-              success: function(trackInfo) {
-                artistId = trackInfo['album']['artists'][0]['id'];
-                songPopularity = trackInfo['popularity'];
-                $.ajax({
-                  url: "https://api.spotify.com/v1/artists/" + artistId,
-                  success: function(artistInfo) {
-                    artistPopularity = artistInfo['popularity'];
-
-                    desiredData = {};
-                    desiredData.songId = songId;
-                    desiredData.artistPopularity = artistPopularity;
-                    desiredData.loudness = spotifyFeatures.loudness;
-                    desiredData.tempo = spotifyFeatures.tempo;
-                    desiredData.key = spotifyFeatures.key;
-                    desiredData.mode = spotifyFeatures.mode;
-                    desiredData.duration = spotifyFeatures.duration_ms;
-                    desiredData.timeSignature = spotifyFeatures.time_signature;
-
-                    console.log(songPopularity, desiredData);
-                  }
-                })
-              }
-            })
-          }
-        });
-      });
-    }
+    });
   });
 
   function songSearch(e) {
@@ -176,25 +97,19 @@ var searchSpotter = true;
     if (keyCode != 13) {
       var text = $("#song_search").val();
 
-      if (searchSpotter) {
-        $.post("/search", {search: text}, function(result) {
+      delay(function() {
+        // Doc: https://developer.spotify.com/web-api/search-item/
+        var spotifySearchType = "track"; // Currently on track (i.e. song) but other options exist (see doc)
+        var spotifyLimit = 5; // Get first 5 results
+        var spotifySearchParams = {q: text,
+          type: spotifySearchType,
+          limit: spotifyLimit};
+
+        $.get(SPOTIFY_SEARCH_ENDPOINT, spotifySearchParams, function(spotifyResult) {
+          var result = formatSpotifyResult(spotifyResult);
           updateUIWithResult(result, text);
         });
-      } else {
-        delay(function() {
-          // Doc: https://developer.spotify.com/web-api/search-item/
-          var spotifySearchType = "track"; // Currently on track (i.e. song) but other options exist (see doc)
-          var spotifyLimit = 5; // Get first 5 results
-          var spotifySearchParams = {q: text,
-            type: spotifySearchType,
-            limit: spotifyLimit};
-
-            $.get(SPOTIFY_SEARCH_ENDPOINT, spotifySearchParams, function(spotifyResult) {
-              var result = formatSpotifyResult(spotifyResult);
-              updateUIWithResult(result, text);
-            });
-          }, KEYUP_DELAY_MS);
-      }
+      }, KEYUP_DELAY_MS);
     }
   }
 
@@ -258,6 +173,192 @@ var searchSpotter = true;
     }
 
     $("#song_search").attr("placeholder", placeholderText);
-  }
+  };
 
+  // Takes in feature data and creates a bar graph that compares the selected song's features to that
+  // of the average features of popular and unpopular songs.
+  function createBarGraph(data) {
+    console.log('create bar graph');
+    console.log(data);
+    // Clear chart svg.
+    $('.chart').empty();
+
+    // Set up array for feature labels for scale
+    var featureLabels = Object.keys(data);
+
+    // Create mapping of features to feature values for each current song,
+    // popular average, and unpopular average
+    featureValsDict['currSong'] = data;
+
+    // Normalize data
+    normFeatureValsDict = normalizeAudioFeatureVals(featureValsDict);
+
+    // {
+    //   'feature': 'key',
+    //   'bars': [
+    //     {
+    //       'name': 'currSong',
+    //       'normValue': 20
+    //       'value': 20
+    //     },
+    //     {
+    //       'name': 'popular',
+    //       'normValue': 20
+    //       'value': 30
+    //     }
+    //   ]
+    // }
+    var featuresArray = [];
+    for (var i = 0; i < featureLabels.length; i++) {
+      var key = featureLabels[i];
+        tempDict = {
+          'feature': key,
+          'bars': []
+        }
+        tempDict['bars'].push({
+          'name': 'currSong',
+          'value': featureValsDict['currSong'][key].toFixed(2),
+          'normValue': normFeatureValsDict['currSong'][key],
+          'label': 'Song Value: '
+        })
+        tempDict['bars'].push({
+          'name': 'popular',
+          'value': featureValsDict['popular'][key].toFixed(2),
+          'normValue': normFeatureValsDict['popular'][key],
+          'label': 'Popular Average: '
+        })
+        tempDict['bars'].push({
+          'name': 'unpopular',
+          'value': featureValsDict['unpopular'][key].toFixed(2),
+          'normValue': normFeatureValsDict['unpopular'][key],
+          'label': 'Unpopular Average: '
+        })
+        featuresArray.push(tempDict);
+    }
+
+    ////////
+    // D3 //
+    ////////
+
+    // Chart dimensions
+    var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 50};
+    var width = 900 - margin.right;
+    var height = 500 - margin.top - margin.bottom;
+
+    // Create the SVG container
+    var svg = d3.select(".chart").append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr('transform', 'translate(' + margin.left + ', 21.0)');
+
+    var options = ['currSong', 'popular', 'unpopular'];
+
+    // Initialize axis
+    var x0 = d3.scaleBand()
+      .domain(featureLabels)
+      .rangeRound([0, width])
+      .paddingInner(0.1);
+    var x1 = d3.scaleBand()
+      .domain(options)
+      .rangeRound([0, x0.bandwidth()])
+      .padding(0.05)
+    var y = d3.scaleLinear()
+      .domain([-1.0, 1.0])
+      .rangeRound([height, 0]);
+
+    var z = d3.scaleOrdinal()
+      .domain(options)
+      .range(["#98abc5", "#6b486b", "#ff8c00"]);
+
+    // Tooltip
+    var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.label + d.value; });
+    svg.call(tip);
+
+    // Draw x-axis
+    svg.append('g')
+      .attr('class', 'axis')
+      .attr('transform', 'translate(0,' + height + ')')
+      .call(d3.axisBottom(x0))
+      .selectAll(".tick text")
+      .style("text-anchor", "middle");
+
+    // Draw bars
+    var bars = svg.append('g')
+      .selectAll('g')
+      .data(featuresArray)
+      .enter().append('g')
+        .attr('transform', function(d) {
+          return 'translate(' + x0(d.feature) + ',0)';
+        })
+
+    bars.selectAll('rect')
+      .data(function(d) {
+        return d.bars
+      })
+      .enter().append('rect')
+        .attr('x', function(d) {
+          return x1(d.name);
+        })
+        .attr('y', function(d) {
+          return y(d.normValue);
+        })
+        .attr('width', x1.bandwidth())
+        .attr('height', function(d) { return height - y(d.normValue); })
+        .attr('fill', function(d) { return z(d.name) })
+        .on('mouseover', tip.show)
+        .on('mouseout', tip.hide);
+  };
+
+  // Normalizes data to fit between [0, 1].
+  function normalizeAudioFeatureVals(dataDict) {
+    var normPlaceholder = {}
+    // Create dict of audio features mapped to array of values (currsong, popavg, unpopavg)
+    for (var key1 in dataDict) {
+      for (var key2 in dataDict[key1]) {
+        if (normPlaceholder[key2]) {
+          normPlaceholder[key2].push(dataDict[key1][key2]);
+        }
+        else {
+          normPlaceholder[key2] = [];
+          normPlaceholder[key2].push(dataDict[key1][key2]);
+        }
+      }
+    }
+
+    // Normalize values for each sound feature
+    for (var key in normPlaceholder) {
+      var normVals = [];
+      var audioVals = normPlaceholder[key];
+      for (var i = 0; i < audioVals.length; i++) {
+        normVals.push((audioVals[i] - Math.min(...audioVals)) / (Math.max(...audioVals) - Math.min(...audioVals)));
+      }
+      normPlaceholder[key] = normVals;
+    }
+
+    // Place normaliezd sound features back into a dictionary of
+    // {
+    //   'popular':
+    //   {
+    //       'featureNorm': 0.4
+    //   }
+    // }
+    var normFeatDict = { 'popular': {}, 'unpopular': {}, 'currSong': {}};
+    for (var key in normPlaceholder) {
+      for (var i = 0; i < normPlaceholder[key].length; i++) {
+        switch(i) {
+          case 0: // popular
+            normFeatDict['popular'][key] = normPlaceholder[key][i];
+            break;
+          case 1: // unpopular
+            normFeatDict['unpopular'][key] = normPlaceholder[key][i];
+            break;
+          case 2: // currSong
+            normFeatDict['currSong'][key] = normPlaceholder[key][i];
+            break;
+        }
+      }
+    }
+    return normFeatDict;
+  };
 });
