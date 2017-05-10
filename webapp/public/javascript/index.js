@@ -70,8 +70,7 @@ $(document).ready(function() {
                   desiredData.time_signature = spotifyFeatures.time_signature;
 
                   $.post('/classifier/classifyNewSong', desiredData, function(data) {
-                    data['spotify_popularity'] = songPopularity;
-                    createClassificationLabel(data);
+                    createClassificationLabel(data, songPopularity);
                     createBarGraph(desiredData);
                   });
                 }
@@ -361,10 +360,11 @@ $(document).ready(function() {
     return normFeatDict;
   };
 
-  function createClassificationLabel(data) {
-    $('#spotify-popularity').text('Spotify Popularity: ' + data.spotify_popularity);
-    $('#classification').text('Spotter Popularity: ' + data.non_binary);
-    if (data.binary == '1') {
+  function createClassificationLabel(data, songPopularity) {
+    var temp = JSON.parse(data);
+    $('#spotify-popularity').text('Spotify Popularity: ' + songPopularity);
+    $('#classification').text('Spotter Popularity: ' + temp['non_binary']);
+    if (temp.binary == '1') {
       $('#classification').addClass('popular');
       $('#classification').removeClass('unpopular');
     }
