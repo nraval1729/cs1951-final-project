@@ -32,7 +32,7 @@ def choose_query(useGenre, useDance, useEnergy, useLoudness, useArtist):
     if useLoudness:
         query += " loudness * loudness,"
     if useArtist:
-        query += " artist_hotness,"
+        query += " artist_familiarity,"
 
     query += " tempo, key, tempo * key, mode, duration, time_signature  FROM songs ORDER BY track_id"
 
@@ -54,9 +54,9 @@ def load_songs(useGenre, useDance, useEnergy, useLoudness, useArtist, training, 
     query = choose_query(useGenre, useDance, useEnergy, useLoudness, useArtist)
 
     if training:
-        query += " LIMIT 15000"
+        query += " LIMIT 10000"
     else:
-        query += " LIMIT 4000 OFFSET 15000"
+        query += " LIMIT 5000 OFFSET 10000"
 
     print (query)
     for song in c.execute(query):
@@ -167,6 +167,8 @@ def main():
     average_unpopular["duration"] /= len_label
     average_unpopular["time_signature"] /= len_label
 
+    print (average_popular["artist_popularity"])
+    print (average_unpopular["artist_popularity"])
     print ("MASSIVE DUMP")
     pickle.dump(average_popular, open("../../../node/average_popular_features.p", "wb"))
     pickle.dump(average_unpopular, open("../../../node/average_unpopular_features.p", "wb"))
@@ -178,8 +180,8 @@ def main():
     ##### TRAIN THE MODEL ######################################
     # Initialize the corresponding type of the classifier
     # NOTE: Be sure to name the variable for your classifier "classifier" so that our stencil works for you!
-    classifier1 = SVC(kernel="rbf")
-    classifier2 = SVC(kernel="rbf")
+    classifier1 = SVC(kernel="linear", C=2)
+    classifier2 = SVC(kernel="linear", C=2)
 
     # TODO: Train your classifier using 'fit'
     classifier1.fit(training_features, training_labels)
@@ -202,10 +204,9 @@ def main():
 
     # TODO: Perform 10 fold cross validation (cross_val_score) with scoring='accuracy'
     print("Doing cross val now:")
-    print(cross_val_score(classifier2, training_features2, training_labels2, cv=5))
 
-    pickle.dump(classifier1, open("../../../node/binary_classifier.p", "wb"))
-    pickle.dump(classifier2, open("../../../node/nonbinary_classifier.p", "wb"))
+    pickle.dump(classifier1, open("../../../node/binary_classifier2.p", "wb"))
+    pickle.dump(classifier2, open("../../../node/nonbinary_classifier2.p", "wb"))
 
     ############################################################
 
