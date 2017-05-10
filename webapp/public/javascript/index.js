@@ -72,18 +72,18 @@ $(document).ready(function() {
                   ////////////////////////////
                   // NISARG LOOK HERE!!!!!! //
                   ////////////////////////////
-                  
-                  $.post('/classifier/classifyNewSong', desiredData, function(data) {
+
+                  // $.post('/classifier/classifyNewSong', desiredData, function(data) {
                     // TODO: call to nisarg's function here
                     // return object will be a single value
                     // {
                     //  popularity: 12
                     // }
-                    createBarGraph(desiredData);
-                  });
+                  // });
                   // create d3 bar graph with features as x-axis: artist_hotness, loudness^2, tempo, key, tempo * mode, mode, duration, time_signature
                   // IN HERE, feed spotify data into endpoint that returns
                   // average feature values for each feature
+                  createBarGraph(desiredData);
                 }
               });
             }
@@ -200,31 +200,47 @@ $(document).ready(function() {
     // Normalize data
     normFeatureValsDict = normalizeAudioFeatureVals(featureValsDict);
 
-    // Mapping of feature labels to curr song feature and popular/unpopular
-    // feature average
-    var featuresArray =  []
-    for (var key1 in featureValsDict) {
-      for (var key2 in featureValsDict[key1]) {
-        var temp = {};
-        temp['feature'] = key2;
-        temp['value'] = featureValsDict[key1][key2];
-        temp['normValue'] = normFeatureValsDict[key1][key2 + 'Norm'];
-        switch(key1) {
-          case 'currSong':
-            temp['index'] = 0;
-            temp['label'] = 'Song Value: ';
-            break;
-          case 'popular':
-            temp['index'] = 1;
-            temp['label'] = 'Popular Song Average: '
-            break;
-          case 'unpopular':
-            temp['index'] = 2;
-            temp['label'] = 'Unpopular Song Average: '
-            break;
+    // {
+    //   'feature': 'key',
+    //   'bars': [
+    //     {
+    //       'name': 'currSong',
+    //       'normValue': 20
+    //       'value': 20
+    //     },
+    //     {
+    //       'name': 'popular',
+    //       'normValue': 20
+    //       'value': 30
+    //     }
+    //   ]
+    // }
+    var featuresArray = [];
+    for (var i = 0; i < featureLabels.length; i++) {
+      var key = featureLabels[i];
+        tempDict = {
+          'feature': key,
+          'bars': []
         }
-        featuresArray.push(temp);
-      }
+        tempDict['bars'].push({
+          'name': 'currSong',
+          'value': featureValsDict['currSong'][key].toFixed(2),
+          'normValue': normFeatureValsDict['currSong'][key],
+          'label': 'Song Value: '
+        })
+        tempDict['bars'].push({
+          'name': 'popular',
+          'value': featureValsDict['popular'][key].toFixed(2),
+          'normValue': normFeatureValsDict['popular'][key],
+          'label': 'Popular Average: '
+        })
+        tempDict['bars'].push({
+          'name': 'unpopular',
+          'value': featureValsDict['unpopular'][key].toFixed(2),
+          'normValue': normFeatureValsDict['unpopular'][key],
+          'label': 'Unpopular Average: '
+        })
+        featuresArray.push(tempDict);
     }
 
     ////////
@@ -243,19 +259,23 @@ $(document).ready(function() {
       .append("g")
       .attr('transform', 'translate(' + margin.left + ', 21.0)');
 
+    var options = ['currSong', 'popular', 'unpopular'];
+
     // Initialize axis
     var x0 = d3.scaleBand()
       .domain(featureLabels)
       .rangeRound([0, width])
       .paddingInner(0.1);
     var x1 = d3.scaleBand()
-      .domain([0, 1, 2])
+      .domain(options)
       .rangeRound([0, x0.bandwidth()])
       .padding(0.05)
     var y = d3.scaleLinear()
-      .rangeRound([height, 0])
-      .domain([0.0, 1.0]);
+      .domain([-1.0, 1.0])
+      .rangeRound([height, 0]);
+
     var z = d3.scaleOrdinal()
+      .domain(options)
       .range(["#98abc5", "#6b486b", "#ff8c00"]);
 
     // Tooltip
@@ -271,55 +291,31 @@ $(document).ready(function() {
       .style("text-anchor", "middle");
 
     // Draw bars
-    // svg.append('g')
-    //   .selectAll('g')
-    //   .data(featuresArray)
-    //   .enter().append('g')
-    //     .attr('transform', function(d) {
-    //       return 'translate(' + x0(d.feature) + ',0)';
-    //     })
-    //   .selectAll('rect')
-    //   .data(featuresArray)
-    //   .enter().append('rect')
-    //     .attr('x', function(d) {
-    //       return x1(d.index);
-    //     })
-    //     .attr('y', function(d) {
-    //       return y(d.normValue);
-    //     })
-    //     .attr('width', x1.bandwidth())
-    //     .attr('height', function(d) { return height - y(d.normValue); })
-    //     .attr('fill', function(d) { return z(d.index) })
-    //     .on('mouseover', tip.show)
-    //     .on('mouseout', tip.hide);
-
-    // want to map feature to category
-    svg.append('g')
+    var bars = svg.append('g')
       .selectAll('g')
       .data(featuresArray)
       .enter().append('g')
         .attr('transform', function(d) {
           return 'translate(' + x0(d.feature) + ',0)';
         })
-      .selectAll('rect')
+
+    bars.selectAll('rect')
       .data(function(d) {
-        featureLabels.map(function(key) {
-          return {key: key, }
-        })
+        console.log(d)
+        return d.bars
       })
       .enter().append('rect')
         .attr('x', function(d) {
-          return x1(d.index);
+          return x1(d.name);
         })
         .attr('y', function(d) {
           return y(d.normValue);
         })
         .attr('width', x1.bandwidth())
         .attr('height', function(d) { return height - y(d.normValue); })
-        .attr('fill', function(d) { return z(d.index) })
+        .attr('fill', function(d) { return z(d.name) })
         .on('mouseover', tip.show)
         .on('mouseout', tip.hide);
-
   };
 
   // Normalizes data to fit between [0, 1].
@@ -360,13 +356,13 @@ $(document).ready(function() {
       for (var i = 0; i < normPlaceholder[key].length; i++) {
         switch(i) {
           case 0: // popular
-            normFeatDict['popular'][key + 'Norm'] = normPlaceholder[key][i];
+            normFeatDict['popular'][key] = normPlaceholder[key][i];
             break;
           case 1: // unpopular
-            normFeatDict['unpopular'][key + 'Norm'] = normPlaceholder[key][i];
+            normFeatDict['unpopular'][key] = normPlaceholder[key][i];
             break;
           case 2: // currSong
-            normFeatDict['currSong'][key + 'Norm'] = normPlaceholder[key][i];
+            normFeatDict['currSong'][key] = normPlaceholder[key][i];
             break;
         }
       }
