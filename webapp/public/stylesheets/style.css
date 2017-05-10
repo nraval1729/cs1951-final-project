@@ -80,3 +80,11 @@ a {
 .range-slider .slider-selection {
   background: #BABABA;
 }
+
+.popular {
+  color: #6b486b;
+}
+
+.unpopular {
+  color: #ff8c00;
+}
