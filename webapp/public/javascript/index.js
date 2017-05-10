@@ -72,13 +72,14 @@ $(document).ready(function() {
                   ////////////////////////////
                   // NISARG LOOK HERE!!!!!! //
                   ////////////////////////////
-                  
+                  console.log("Sending request at /classifier/classifyNewSong now!");
                   $.post('/classifier/classifyNewSong', desiredData, function(data) {
                     // TODO: call to nisarg's function here
                     // return object will be a single value
                     // {
                     //  popularity: 12
                     // }
+                    console.log("OUTPUT FROM CONTROLLER: " +data);
                     createBarGraph(desiredData);
                   });
                   // create d3 bar graph with features as x-axis: artist_hotness, loudness^2, tempo, key, tempo * mode, mode, duration, time_signature

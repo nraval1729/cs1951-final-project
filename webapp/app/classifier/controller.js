@@ -28,16 +28,16 @@ launchSendPopularUnpopularAverages();
 // Given the raw feature values for a random Spotify song, classify its
 // popularity by our classification algorithm
 function classifyNewSongPost(req, res) {
-  // Raw feature values from new Spotify song
   var songIdToFeaturesObj = {};
-  songIdToFeaturesObj.artist_hotness = req.body.artistPopularity;
+  songIdToFeaturesObj.artist_hotness = req.body.artist_popularity;
   songIdToFeaturesObj.duration = req.body.duration;
   songIdToFeaturesObj.key = req.body.key;
   songIdToFeaturesObj.loudness = req.body.loudness;
   songIdToFeaturesObj.mode = req.body.mode;
   songIdToFeaturesObj.tempo = req.body.tempo;
-  songIdToFeaturesObj.time_signature = req.body.timeSignature;
   songIdToFeaturesObj.tempoXkey = req.body.tempoXkey
+  songIdToFeaturesObj.time_signature = req.body.time_signature;
+  console.log("FUCKING OBJECT: " +JSON.stringify(songIdToFeaturesObj, null, 4));
 
 
   // Input must be in array
@@ -102,27 +102,18 @@ function featureAveragesGet(req, res) {
 //     object which maps the feature name to its corresponding raw value
 function classifyFeatures(songIdToFeaturesObj, response) {
 
-  // This is just for testing purposes
-  var songIdToFeaturesObj = {
-        "artist_popularity": 10,
-        "duration": 10,
-        "key": 10,
-        "loudness": 10,
-        "mode": 10,
-        "tempo": 10,
-        "time_signature": 10,
-        "tempoXkey": 10
-  }
-
   var featuresArray = Object.keys(songIdToFeaturesObj).map(function (key) {
     return songIdToFeaturesObj[key];
   });
 
-  console.log("The fa being sent to classifier: ", featuresArray);
+  console.log("features array: ");
+  console.log(JSON.stringify(featuresArray));
+
 
   // Send the features to the process
   var filePath = __dirname + "/../../../scripts/send_classifier_output.py";
-  var proc = spawn('python3',[scriptPath]);
+  console.log("FILEPATH FOR classifier: " +filePath);
+  var proc = spawn('python3',[filePath]);
 
   proc.stdin.write(JSON.stringify(featuresArray));
   proc.stdin.end();
@@ -159,7 +150,7 @@ function sqlResults(statement, params) {
 
 function launchSendPopularUnpopularAverages() {
   var filePath = __dirname + "/../../../scripts/send_popular_unpopular.py";
-  var proc = spawn('python3',[scriptPath]);
+  var proc = spawn('python3',[filePath]);
   proc.stdout.on('data', function(data) {
       // console.log("Received: \n" +data);
       featureAveragesObj = data;
