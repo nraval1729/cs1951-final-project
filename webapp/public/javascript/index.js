@@ -69,14 +69,11 @@ $(document).ready(function() {
                   desiredData.tempoXkey = spotifyFeatures.tempo * spotifyFeatures.key;
                   desiredData.time_signature = spotifyFeatures.time_signature;
 
-                  console.log('hitting classifier');
                   $.post('/classifier/classifyNewSong', desiredData, function(data) {
-                    console.log("OUTPUT FROM CONTROLLER: " +data);
-
+                    data['spotify_popularity'] = songPopularity;
+                    createClassificationLabel(data);
                     createBarGraph(desiredData);
-
                   });
-
                 }
               });
             }
@@ -362,5 +359,18 @@ $(document).ready(function() {
       }
     }
     return normFeatDict;
+  };
+
+  function createClassificationLabel(data) {
+    $('#spotify-popularity').text('Spotify Popularity: ' + data.spotify_popularity);
+    $('#classification').text('Spotter Popularity: ' + data.non_binary);
+    if (data.binary == '1') {
+      $('#classification').addClass('popular');
+      $('#classification').removeClass('unpopular');
+    }
+    else {
+      $('#classification').addClass('unpopular');
+      $('#classification').removeClass('popular');
+    }
   };
 });
