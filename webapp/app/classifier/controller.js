@@ -102,9 +102,20 @@ function featureAveragesGet(req, res) {
 //     object which maps the feature name to its corresponding raw value
 function classifyFeatures(songIdToFeaturesObj, response) {
 
-  var featuresArray = Object.keys(songIdToFeaturesObj).map(function (key) {
-    return songIdToFeaturesObj[key];
-  });
+
+  console.log("songIdToFeaturesObj: " +songIdToFeaturesObj);
+  console.log("KEYS: " +Object.keys(songIdToFeaturesObj));
+
+  var featuresArray = [];
+
+  featuresArray.push(songIdToFeaturesObj.loudness)
+  featuresArray.push(songIdToFeaturesObj.artist_hotness)
+  featuresArray.push(songIdToFeaturesObj.tempo)
+  featuresArray.push(songIdToFeaturesObj.key)
+  featuresArray.push(songIdToFeaturesObj.tempoXkey)
+  featuresArray.push(songIdToFeaturesObj.mode)
+  featuresArray.push(songIdToFeaturesObj.duration)
+  featuresArray.push(songIdToFeaturesObj.time_signature)
 
   console.log("features array: ");
   console.log(JSON.stringify(featuresArray));
@@ -112,7 +123,7 @@ function classifyFeatures(songIdToFeaturesObj, response) {
 
   // Send the features to the process
   var filePath = __dirname + "/../../../scripts/send_classifier_output.py";
-  // console.log("FILEPATH FOR classifier: " +filePath);
+  console.log("FILEPATH FOR classifier: " +filePath);
   var proc = spawn('python3',[filePath]);
 
   proc.stdin.write(JSON.stringify(featuresArray));

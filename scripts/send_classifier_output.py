@@ -25,14 +25,16 @@ def flush_output():
 def get_features_from_stdin():
 	line = sys.stdin.readline()
 	feature_list = numpy.asarray([float(i) for i in json.loads(line)]).reshape(1,-1)
+	# print(feature_list)
+	# flush_output()
 
 	return feature_list
 	# return json.loads(line)
 
 def get_pickled_files():
-	bc = pickle.load(open(cwd + "/../../node/binary_classifier.p", "rb"))
+	bc = pickle.load(open(cwd + "/../../node/binary_classifier3.p", "rb"))
 
-	nbc = pickle.load(open(cwd + "/../../node/nonbinary_classifier.p", "rb"))
+	nbc = pickle.load(open(cwd + "/../../node/nonbinary_classifier3.p", "rb"))
 
 	return (bc, nbc)
 
@@ -40,12 +42,15 @@ def get_predictions(bc, nbc, fl):
 	predictions = {}
 	predictions["binary"] = str(bc.predict(fl)[0])
 	predictions["non_binary"] = str(nbc.predict(fl)[0])
+	# print(bc.predict(fl))
+	# print(nbc.predict(fl))
+	# flush_output()
 
 	return predictions
 
 def main():
 	features_list = get_features_from_stdin()
-
+ 
 	binary_classifier, nonbinary_classifier = get_pickled_files()
 	
 	predictions = get_predictions(binary_classifier, nonbinary_classifier, features_list)
