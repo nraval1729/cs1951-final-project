@@ -143,6 +143,7 @@ var searchSpotter = true;
                     artistPopularity = artistInfo['popularity'];
 
                     desiredData = {};
+                    desiredData.songId = songId;
                     desiredData.artistPopularity = artistPopularity;
                     desiredData.loudness = spotifyFeatures.loudness;
                     desiredData.tempo = spotifyFeatures.tempo;
