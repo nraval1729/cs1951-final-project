@@ -6,18 +6,23 @@ var SPOTIFY_SEARCH_ENDPOINT = "https://api.spotify.com/v1/search";
 var curr_songs = {};
 var selected_song = {};
 var searchSpotter = true;
-  // Delay search until X milliseconds has elapsed from when user stops
-  // typing, so as not to get rate-limited by Spotify.
-  // https://stackoverflow.com/questions/1909441/how-to-delay-the-keyup-handler-until-the-user-stops-typing
-  var delay = (function() {
-    var timer = 0;
-    return function(callback, ms){
-      clearTimeout (timer);
-      timer = setTimeout(callback, ms);
-    };
-  })();
+// Delay search until X milliseconds has elapsed from when user stops
+// typing, so as not to get rate-limited by Spotify.
+// https://stackoverflow.com/questions/1909441/how-to-delay-the-keyup-handler-until-the-user-stops-typing
+var delay = (function() {
+  var timer = 0;
+  return function(callback, ms){
+    clearTimeout (timer);
+    timer = setTimeout(callback, ms);
+  };
+})();
 
-  $(document).ready(function() {
+$(document).ready(function() {
+  $.get('/classifier/featureAverages', function(data) {
+    featureValsDict = JSON.parse(data);
+  });
+
+
   // On initialization, hide suggestions list
   $("#sugs_list").hide();
 
@@ -37,51 +42,55 @@ var searchSpotter = true;
 
     var songId = $(this).attr('song_id');
 
-    if (searchSpotter) {
-      // Handle searching initial database. should be same visualization as searching spotify api, but with
-      // different features
-    } else {
-      var spotifyFeatures;
-      $.get("/authenticate", function(accessToken) {
-        $.ajax({
-          url: "https://api.spotify.com/v1/audio-features/" + songId,
-          headers: {"Authorization": "Bearer " + accessToken},
-          success: function(features) {
-            spotifyFeatures = features;
-            $.ajax({
-              url: "https://api.spotify.com/v1/tracks/" + songId,
-              success: function(trackInfo) {
-                artistId = trackInfo['album']['artists'][0]['id'];
-                songPopularity = trackInfo['popularity'];
-                $.ajax({
-                  url: "https://api.spotify.com/v1/artists/" + artistId,
-                  success: function(artistInfo) {
-                    artistPopularity = artistInfo['popularity'];
+    var spotifyFeatures;
+    $.get("/authenticate", function(accessToken) {
+      $.ajax({
+        url: "https://api.spotify.com/v1/audio-features/" + songId,
+        headers: {"Authorization": "Bearer " + accessToken},
+        success: function(features) {
+          spotifyFeatures = features;
+          $.ajax({
+            url: "https://api.spotify.com/v1/tracks/" + songId,
+            success: function(trackInfo) {
+              artistId = trackInfo['album']['artists'][0]['id'];
+              songPopularity = trackInfo['popularity'];
+              $.ajax({
+                url: "https://api.spotify.com/v1/artists/" + artistId,
+                success: function(artistInfo) {
+                  artistPopularity = artistInfo['popularity'];
 
-                    desiredData = {};
-                    desiredData.artistPopularity = artistPopularity;
-                    desiredData.loudness = spotifyFeatures.loudness;
-                    desiredData.tempo = spotifyFeatures.tempo;
-                    desiredData.key = spotifyFeatures.key;
-                    desiredData.mode = spotifyFeatures.mode;
-                    desiredData.duration = spotifyFeatures.duration_ms;
-                    desiredData.timeSignature = spotifyFeatures.time_signature;
+                  desiredData = {};
+                  desiredData.artist_popularity = artistPopularity / 100.0;
+                  desiredData.duration = spotifyFeatures.duration_ms / 1000.0;
+                  desiredData.key = spotifyFeatures.key;
+                  desiredData.loudness = spotifyFeatures.loudness;
+                  desiredData.mode = spotifyFeatures.mode;
+                  desiredData.tempo = spotifyFeatures.tempo;
+                  desiredData.tempoXkey = spotifyFeatures.tempo * spotifyFeatures.key;
+                  desiredData.time_signature = spotifyFeatures.time_signature;
 
-                    console.log(songPopularity, desiredData);
-                    // create d3 bar graph with features as x-axis: artist_hotness, loudness^2, tempo, key, tempo * mode, mode, duration, time_signature
+                  ////////////////////////////
+                  // NISARG LOOK HERE!!!!!! //
+                  ////////////////////////////
+                  
+                  $.post('/classifier/classifyNewSong', desiredData, function(data) {
+                    // TODO: call to nisarg's function here
+                    // return object will be a single value
+                    // {
+                    //  popularity: 12
+                    // }
                     createBarGraph(desiredData);
-
-                    // IN HERE, feed spotify data into endpoint that returns
-                    // average feature values for each feature
-                  }
-                });
-              }
-            });
-
-          }
-        });
+                  });
+                  // create d3 bar graph with features as x-axis: artist_hotness, loudness^2, tempo, key, tempo * mode, mode, duration, time_signature
+                  // IN HERE, feed spotify data into endpoint that returns
+                  // average feature values for each feature
+                }
+              });
+            }
+          });
+        }
       });
-    }
+    });
   });
 
   function songSearch(e) {
@@ -97,25 +106,19 @@ var searchSpotter = true;
     if (keyCode != 13) {
       var text = $("#song_search").val();
 
-      if (searchSpotter) {
-        $.post("/search", {search: text}, function(result) {
+      delay(function() {
+        // Doc: https://developer.spotify.com/web-api/search-item/
+        var spotifySearchType = "track"; // Currently on track (i.e. song) but other options exist (see doc)
+        var spotifyLimit = 5; // Get first 5 results
+        var spotifySearchParams = {q: text,
+          type: spotifySearchType,
+          limit: spotifyLimit};
+
+        $.get(SPOTIFY_SEARCH_ENDPOINT, spotifySearchParams, function(spotifyResult) {
+          var result = formatSpotifyResult(spotifyResult);
           updateUIWithResult(result, text);
         });
-      } else {
-        delay(function() {
-          // Doc: https://developer.spotify.com/web-api/search-item/
-          var spotifySearchType = "track"; // Currently on track (i.e. song) but other options exist (see doc)
-          var spotifyLimit = 5; // Get first 5 results
-          var spotifySearchParams = {q: text,
-            type: spotifySearchType,
-            limit: spotifyLimit};
-
-            $.get(SPOTIFY_SEARCH_ENDPOINT, spotifySearchParams, function(spotifyResult) {
-              var result = formatSpotifyResult(spotifyResult);
-              updateUIWithResult(result, text);
-            });
-          }, KEYUP_DELAY_MS);
-      }
+      }, KEYUP_DELAY_MS);
     }
   }
 
@@ -187,48 +190,42 @@ var searchSpotter = true;
     // Clear chart svg.
     $('.chart').empty();
 
-    ////////////////////
-    // NORMALIZE DATA //
-    ////////////////////
-    var NUMFEATURES = 7
-    // Set up arrays for feature labels/values
+    // Set up array for feature labels for scale
     var featureLabels = Object.keys(data);
-    var featureValues = Object.values(data);
 
-    var DUMMY_DATA = [0.5, 0.3, 0.8];
+    // Create mapping of features to feature values for each current song,
+    // popular average, and unpopular average
+    featureValsDict['currSong'] = data;
+
+    // Normalize data
+    normFeatureValsDict = normalizeAudioFeatureVals(featureValsDict);
+
     // Mapping of feature labels to curr song feature and popular/unpopular
-    // feature average (DUMMY DATA)
-    var features =  []
-    for (var i = 0; i < NUMFEATURES; i++) {
-      for (var j = 0; j < 3; j++) {
+    // feature average
+    var featuresArray =  []
+    for (var key1 in featureValsDict) {
+      for (var key2 in featureValsDict[key1]) {
         var temp = {};
-        temp['feature'] = featureLabels[i];
-        temp['index'] = j;
-        temp['normValue'] = DUMMY_DATA[j];
-        temp['value'] = 1000000;
-        switch(j) {
-          case 0:
-            temp['label'] = 'Song Value: '
+        temp['feature'] = key2;
+        temp['value'] = featureValsDict[key1][key2];
+        temp['normValue'] = normFeatureValsDict[key1][key2 + 'Norm'];
+        switch(key1) {
+          case 'currSong':
+            temp['index'] = 0;
+            temp['label'] = 'Song Value: ';
             break;
-          case 1:
+          case 'popular':
+            temp['index'] = 1;
             temp['label'] = 'Popular Song Average: '
             break;
-          case 2:
+          case 'unpopular':
+            temp['index'] = 2;
             temp['label'] = 'Unpopular Song Average: '
             break;
         }
-        features.push(temp);
+        featuresArray.push(temp);
       }
     }
-
-    console.log(features);
-
-    // TODO: NORMALIZE DATA
-    // var normalizedFeatureValues = [];
-    // Normalize y-values for each feature
-    // for (var i = 0; i < featureValues.length; i++) {
-    //   normalizedFeatureValues.push(normalize(featureValues[i], featureValues));
-    // };
 
     ////////
     // D3 //
@@ -244,7 +241,7 @@ var searchSpotter = true;
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
       .append("g")
-      .attr('transform', 'translate(' + margin.left + ',0.0)');
+      .attr('transform', 'translate(' + margin.left + ', 21.0)');
 
     // Initialize axis
     var x0 = d3.scaleBand()
@@ -265,15 +262,7 @@ var searchSpotter = true;
     var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return d.label + d.value; });
     svg.call(tip);
 
-    // Create pixel spacing for x-axis for features
-    var featureLabelPixels = [];
-    var currPixelVal = 0;
-    for (var i = 0; i < NUMFEATURES; i++) {
-      featureLabelPixels.push(currPixelVal)
-      currPixelVal += width / NUMFEATURES;
-    }
-
-
+    // Draw x-axis
     svg.append('g')
       .attr('class', 'axis')
       .attr('transform', 'translate(0,' + height + ')')
@@ -281,20 +270,43 @@ var searchSpotter = true;
       .selectAll(".tick text")
       .style("text-anchor", "middle");
 
-    // NO NEED TO DRAW Y AXIS.
+    // Draw bars
     // svg.append('g')
-    //   .attr('class', 'axis')
-    //   .call(d3.axisLeft(y));
+    //   .selectAll('g')
+    //   .data(featuresArray)
+    //   .enter().append('g')
+    //     .attr('transform', function(d) {
+    //       return 'translate(' + x0(d.feature) + ',0)';
+    //     })
+    //   .selectAll('rect')
+    //   .data(featuresArray)
+    //   .enter().append('rect')
+    //     .attr('x', function(d) {
+    //       return x1(d.index);
+    //     })
+    //     .attr('y', function(d) {
+    //       return y(d.normValue);
+    //     })
+    //     .attr('width', x1.bandwidth())
+    //     .attr('height', function(d) { return height - y(d.normValue); })
+    //     .attr('fill', function(d) { return z(d.index) })
+    //     .on('mouseover', tip.show)
+    //     .on('mouseout', tip.hide);
 
+    // want to map feature to category
     svg.append('g')
       .selectAll('g')
-      .data(features)
+      .data(featuresArray)
       .enter().append('g')
         .attr('transform', function(d) {
           return 'translate(' + x0(d.feature) + ',0)';
         })
       .selectAll('rect')
-      .data(features)
+      .data(function(d) {
+        featureLabels.map(function(key) {
+          return {key: key, }
+        })
+      })
       .enter().append('rect')
         .attr('x', function(d) {
           return x1(d.index);
@@ -310,9 +322,55 @@ var searchSpotter = true;
 
   };
 
-  // Normalizes data to fit between [0, 1]
-  function normalize(currValue, values) {
-    return (currValue - Math.min(...values)) / (Math.max(...values) - Math.min(...values));
-  };
+  // Normalizes data to fit between [0, 1].
+  function normalizeAudioFeatureVals(dataDict) {
+    var normPlaceholder = {}
+    // Create dict of audio features mapped to array of values (currsong, popavg, unpopavg)
+    for (var key1 in dataDict) {
+      for (var key2 in dataDict[key1]) {
+        if (normPlaceholder[key2]) {
+          normPlaceholder[key2].push(dataDict[key1][key2]);
+        }
+        else {
+          normPlaceholder[key2] = [];
+          normPlaceholder[key2].push(dataDict[key1][key2]);
+        }
+      }
+    }
 
+    // Normalize values for each sound feature
+    for (var key in normPlaceholder) {
+      var normVals = [];
+      var audioVals = normPlaceholder[key];
+      for (var i = 0; i < audioVals.length; i++) {
+        normVals.push((audioVals[i] - Math.min(...audioVals)) / (Math.max(...audioVals) - Math.min(...audioVals)));
+      }
+      normPlaceholder[key] = normVals;
+    }
+
+    // Place normaliezd sound features back into a dictionary of
+    // {
+    //   'popular':
+    //   {
+    //       'featureNorm': 0.4
+    //   }
+    // }
+    var normFeatDict = { 'popular': {}, 'unpopular': {}, 'currSong': {}};
+    for (var key in normPlaceholder) {
+      for (var i = 0; i < normPlaceholder[key].length; i++) {
+        switch(i) {
+          case 0: // popular
+            normFeatDict['popular'][key + 'Norm'] = normPlaceholder[key][i];
+            break;
+          case 1: // unpopular
+            normFeatDict['unpopular'][key + 'Norm'] = normPlaceholder[key][i];
+            break;
+          case 2: // currSong
+            normFeatDict['currSong'][key + 'Norm'] = normPlaceholder[key][i];
+            break;
+        }
+      }
+    }
+    return normFeatDict;
+  };
 });

@@ -122,8 +122,8 @@ def main():
     count = 0.0
     training_features2, training_labels2 = load_songs(False, False, False, True, True, True, False)
 
-    average_popular = {"artist_popularity" : 0, "loudness" : 0, "tempo":  0, "key": 0, "tempo * key": 0, "mode" : 0, "duration": 0, "time_signature": 0}
-    average_unpopular = {"artist_popularity" : 0, "loudness" : 0, "tempo":  0, "key": 0, "tempo * key": 0, "mode" : 0, "duration": 0, "time_signature": 0}
+    average_popular = {"artist_popularity" : 0, "loudness" : 0, "tempo":  0, "key": 0, "tempoXkey": 0, "mode" : 0, "duration": 0, "time_signature": 0}
+    average_unpopular = {"artist_popularity" : 0, "loudness" : 0, "tempo":  0, "key": 0, "tempoXkey": 0, "mode" : 0, "duration": 0, "time_signature": 0}
 
     for i in range(0, len(training_labels)):
         if training_labels[i] == 1:
@@ -133,7 +133,7 @@ def main():
             average_popular["loudness"] += training_features[i][0]
             average_popular["tempo"] += training_features[i][2]
             average_popular["key"] += training_features[i][3]
-            average_popular["tempo * key"] += training_features[i][4]
+            average_popular["tempoXkey"] += training_features[i][4]
             average_popular["mode"] += training_features[i][5]
             average_popular["duration"] += training_features[i][6]
             average_popular["time_signature"] += training_features[i][7]
@@ -142,7 +142,7 @@ def main():
             average_unpopular["loudness"] += training_features[i][0]
             average_unpopular["tempo"] += training_features[i][2]
             average_unpopular["key"] += training_features[i][3]
-            average_unpopular["tempo * key"] += training_features[i][4]
+            average_unpopular["tempoXkey"] += training_features[i][4]
             average_unpopular["mode"] += training_features[i][5]
             average_unpopular["duration"] += training_features[i][6]
             average_unpopular["time_signature"] += training_features[i][7]
@@ -153,7 +153,7 @@ def main():
     average_popular["loudness"] /= len_label
     average_popular["tempo"] /= len_label
     average_popular["key"] /= len_label
-    average_popular["tempo * key"] /= len_label
+    average_popular["tempoXkey"] /= len_label
     average_popular["mode"] /= len_label
     average_popular["duration"] /= len_label
     average_popular["time_signature"] /= len_label
@@ -162,7 +162,7 @@ def main():
     average_unpopular["loudness"] /= len_label
     average_unpopular["tempo"] /= len_label
     average_unpopular["key"] /= len_label
-    average_unpopular["tempo * key"] /= len_label
+    average_unpopular["tempoXkey"] /= len_label
     average_unpopular["mode"] /= len_label
     average_unpopular["duration"] /= len_label
     average_unpopular["time_signature"] /= len_label
