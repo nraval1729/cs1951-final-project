@@ -112,7 +112,7 @@ function classifyFeatures(songIdToFeaturesObj, response) {
 
   // Send the features to the process
   var filePath = __dirname + "/../../../scripts/send_classifier_output.py";
-  console.log("FILEPATH FOR classifier: " +filePath);
+  // console.log("FILEPATH FOR classifier: " +filePath);
   var proc = spawn('python3',[filePath]);
 
   proc.stdin.write(JSON.stringify(featuresArray));
